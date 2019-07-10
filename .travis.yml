@@ -1,0 +1,17 @@
+sudo: required
+language: node_js
+node_js:
+  - "10"
+install: yarn install --pure-lockfile
+jobs:
+  include:
+    - stage: "Tests"
+      name: "TSLint"
+      script: yarn tslint
+    - stage: "Tests"
+      name: "Test"
+      script: yarn test
+    - stage: "Deployment"
+      if: type != pull_request AND (branch = master OR branch = develop)
+      before_install: chmod +rx .travis/deploy.sh
+      script: .travis/deploy.sh
