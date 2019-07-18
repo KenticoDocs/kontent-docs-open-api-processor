@@ -1,7 +1,12 @@
 import {
+    ComponentsObject,
     InfoObject,
     OpenApiSpec,
+    ParameterObject,
     PathsObject,
+    ReferenceObject,
+    SecuritySchemeObject,
+    SecuritySchemeType,
     ServerObject,
     TagObject,
 } from '@loopback/openapi-v3-types';
@@ -9,26 +14,36 @@ import {
     ICategory,
     IContact,
     ILicense,
+    IParameter,
     IPathOperation,
     IPreprocessedData,
+    ISecurityScheme,
     IServer,
     IZapiSpecification,
 } from 'cloud-docs-shared-code/reference/preprocessedModels';
 import {
+    addProperty,
     getChildCodenamesFromRichText,
     getItemData,
     isNonEmptyString,
 } from '../utils/helpers';
+import {
+    processRichTextWithCallouts,
+    processRichTextWithComponents,
+} from '../utils/richTextProcessing';
+
+const parameters = new Set<ParameterObject>();
 
 export const generateApiSpecification = (data: IPreprocessedData): OpenApiSpec => {
     const items = data.items;
     const apiSpecification: IZapiSpecification = items[data.zapiSpecificationCodename];
+    const components: ComponentsObject = resolveComponentsObject(apiSpecification, items);
 
     return {
-        // components: resolveComponentsObject(apiSpecification, items),
+        components,
         info: resolveInfoObject(apiSpecification, items),
         openapi: '3.0.2',
-        paths: resolvePathObjects(apiSpecification.pathOperations, items),
+        paths: resolvePathsObject(apiSpecification.categories, items),
         security: [],
         servers: resolveServerObjects(apiSpecification.servers, items),
         tags: resolveTagObjects(apiSpecification.categories, items),
@@ -36,10 +51,8 @@ export const generateApiSpecification = (data: IPreprocessedData): OpenApiSpec =
 };
 
 const resolveInfoObject = (apiSpecification: IZapiSpecification, items: unknown): InfoObject => {
-    // TODO process Description Rich Text Element !!!!!!!!!!!!!!!
-
     const infoObject: InfoObject = {
-        description: apiSpecification.description,
+        description: processRichTextWithComponents(apiSpecification.description, items),
         title: apiSpecification.title,
         version: apiSpecification.version,
     };
@@ -77,39 +90,90 @@ const resolveTagObjects = (categoriesCodenames: string[], items: unknown): TagOb
     categoriesCodenames.map((codename) => {
         const category = getItemData<ICategory>(codename, items);
 
-        // TODO process Description Rich Text Element !!!!!!!!!!!!!!!
-
         return {
-            description: category.description,
+            description: processRichTextWithComponents(category.description, items),
             name: category.name,
         };
     });
 
-const resolvePathObjects = (pathOperationsCodenames: string[], items: unknown): PathsObject => {
+interface IPathOperationData {
+    readonly categoryName: string;
+    readonly codename: string;
+}
+
+const resolvePathsObject = (categoriesCodenames: string[], items: unknown): PathsObject => {
     const pathsObject = {};
+    const pathOperationsData = new Set<IPathOperationData>();
 
-    pathOperationsCodenames.forEach((codename) => {
-        const pathObject = getItemData<IPathOperation>(codename, items);
+    categoriesCodenames.forEach((codename) => {
+        const categoryObject = getItemData<ICategory>(codename, items);
 
-        // TODO process Description Rich Text Element !!!!!!!!!!!!!!!
-        const tagsList = pathObject.category.map((categoryCodename) => {
-            const category = getItemData<ICategory>(categoryCodename, items);
-
-            return category.name;
+        categoryObject.pathOperations.forEach((pathOperationCodename) => {
+            pathOperationsData.add({
+                categoryName: categoryObject.name,
+                codename: pathOperationCodename,
+            });
         });
+    });
 
-        pathsObject[pathObject.path][pathObject.pathOperation] = {
-            deprecated: pathObject.deprecated,
-            description: pathObject.description,
-            operationId: pathObject.url,
-            parameters: pathObject.parameters, // TODO Resolve parameters
-            requestBody: pathObject.requestBody, // TODO Resolve
-            // TODO Check how code samples of pathsObject will be resolved
-            responses: pathObject.responses, // TODO resolve
-            summary: pathObject.name,
-            tags: tagsList,
+    pathOperationsData.forEach((operationData) => {
+        const pathOperationObject = getItemData<IPathOperation>(operationData.codename, items);
+        const pathOperation = pathOperationObject.pathOperation[0];
+
+        pathsObject[pathOperationObject.path] = {
+            [pathOperation]: {
+                deprecated: pathOperationObject.deprecated,
+                description: processRichTextWithComponents(pathOperationObject.description, items),
+                operationId: pathOperationObject.url,
+                parameters: resolveParameterObjects(pathOperationObject.parameters, items),
+                requestBody: pathOperationObject.requestBody, // TODO Resolve
+                responses: pathOperationObject.responses, // TODO resolve
+                summary: pathOperationObject.name,
+                // TODO Check how code samples of pathsObject will be resolved
+                tags: [operationData.categoryName],
+            },
         };
     });
 
     return pathsObject;
+};
+
+const resolveParameterObjects = (codenames: string[], items: unknown): ReferenceObject[] => {
+    return codenames.map((codename) => {
+        const parameterObject = getItemData<IParameter>(codename, items);
+
+        return {
+            $ref: '#/components/parameters' + parameterObject.name,
+        };
+    });
+};
+
+const resolveComponentsObject = (apiSpecification: IZapiSpecification, items: unknown): ComponentsObject => {
+    const securitySchemes = resolveSecuritySchemeObject(apiSpecification, items);
+
+    // TODO Handle all the other component items
+
+    return {
+        securitySchemes: {
+            [securitySchemes.name]: securitySchemes,
+        },
+    };
+};
+
+const resolveSecuritySchemeObject = (apiSpecification: IZapiSpecification, items: unknown): SecuritySchemeObject => {
+    if (apiSpecification.security.length === 1) {
+        const securitySchemeObject = getItemData<ISecurityScheme>(apiSpecification.security[0], items);
+
+        const securityScheme = {
+            description: processRichTextWithCallouts(securitySchemeObject.description, items),
+            scheme: securitySchemeObject.scheme,
+            type: securitySchemeObject.type[0] as SecuritySchemeType,
+        };
+        const securitySchemeName = securitySchemeObject.name;
+        addProperty(securityScheme, 'name', securitySchemeName);
+        addProperty(securityScheme, 'bearerFormat', securitySchemeObject.bearerFormat);
+        addProperty(securityScheme, 'in', securitySchemeObject.apiKeyLocation);
+
+        return securityScheme;
+    }
 };

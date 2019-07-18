@@ -8,7 +8,7 @@ export const getItemData = <DataObject>(codename: string, items: unknown): DataO
 
 export const getChildCodenamesFromRichText = (content: string): string[] => {
     const root = parser.parse(content);
-    const objectElements = root.querySelectorAll('object');
+    const objectElements = root.querySelectorAll('p');
 
     const linkedItemCodenames = getInnerItemCodenames(objectElements, 'link');
     const componentCodenames = getInnerItemCodenames(objectElements, 'component');
@@ -23,3 +23,11 @@ const getInnerItemCodenames = (elements: HTMLElement[], type: string): string[] 
             objectElement.rawAttributes['data-type'] === 'item' &&
             objectElement.rawAttributes['data-rel'] === type)
         .map((objectElement: any) => objectElement.rawAttributes['data-codename']);
+
+export const addProperty = (obj: any, name: string, value: any): any => {
+    if (isNonEmptyString(name) && value) {
+        obj[name] = value;
+    }
+
+    return obj;
+};

@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@azure/storage-blob": "^10.3.0",
-    "cloud-docs-shared-code": "^1.3.0",
+    "cloud-docs-shared-code": "^1.3.4",
+    "html2commonmark": "^0.6.1",
     "node-html-parser": "^1.1.16",
     "yamljs": "^0.3.0"
   },

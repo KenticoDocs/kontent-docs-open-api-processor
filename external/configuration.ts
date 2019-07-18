@@ -1,6 +1,7 @@
 interface IConfiguration {
-    readonly azureAccountName: string;
+    readonly azureStorageAccountName: string;
     readonly azureStorageKey: string;
+    readonly azureContainerName: string;
 }
 
 export class Configuration {
@@ -8,9 +9,10 @@ export class Configuration {
 
     public static set = (isTest: boolean) => {
         Configuration.keys = {
-            azureAccountName: Configuration.getEnvironmentVariable('Azure.StorageAccountName'),
-            azureStorageKey: Configuration.getEnvironmentVariable('Azure.StorageKey'),
-        }
+            azureContainerName: Configuration.getEnvironmentVariable('Azure.ContainerName', isTest),
+            azureStorageAccountName: Configuration.getEnvironmentVariable('Azure.StorageAccountName', isTest),
+            azureStorageKey: Configuration.getEnvironmentVariable('Azure.StorageKey', isTest),
+        };
     };
 
     private static getEnvironmentVariable = (variableName: string, isTest?: boolean): string =>

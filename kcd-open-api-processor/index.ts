@@ -2,27 +2,31 @@ import {
     AzureFunction,
     Context,
 } from '@azure/functions';
-import { IBlobEventGridEvent } from 'cloud-docs-shared-code';
-import { getBlobContainerName } from 'cloud-docs-shared-code/getBlobContainerName';
 import { getBlobFromStorage } from 'cloud-docs-shared-code/getBlobFromStorage';
 import { IPreprocessedData } from 'cloud-docs-shared-code/reference/preprocessedModels';
+import { storeReferenceDataToBlobStorage } from '../external/blobManager';
 import { Configuration } from '../external/configuration';
 import { generateApiSpecification } from '../generate/generateApiSpecification';
 
-const eventGridTrigger: AzureFunction = async (context: Context, eventGridEvent: IBlobEventGridEvent): Promise<void> => {
+const eventGridTrigger: AzureFunction = async (context: Context, eventGridEvent: any): Promise<any> => {
     try {
-        const container = getBlobContainerName(eventGridEvent);
-        const isTest = container.includes('test');
+        // const container = getBlobContainerName(eventGridEvent.body);
+        // const isTest = container.includes('test');
 
-        Configuration.set(isTest);
+        Configuration.set(false);
 
         const blob = await getBlobFromStorage<IPreprocessedData>(
-            eventGridEvent.data.url,
-            Configuration.keys.azureAccountName,
+            eventGridEvent.body.data.url,
+            Configuration.keys.azureStorageAccountName,
             Configuration.keys.azureStorageKey,
         );
-        const yamlFile = generateApiSpecification(blob);
+        const yaml = generateApiSpecification(blob);
 
+        // await storeReferenceDataToBlobStorage(yaml, blob.zapiSpecificationCodename, blob.operation);
+
+        context.res = {
+            body: yaml,
+        };
     } catch (error) {
         /** This try-catch is required for correct logging of exceptions in Azure */
         throw `Message: ${error.message} \nStack Trace: ${error.stack}`;
