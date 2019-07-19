@@ -69,7 +69,9 @@ const labelChildren = <AllowedItems>(labelFunction: ILabelFunction<AllowedItems>
         childElementsData.forEach((childElementData) => {
             const item = getItemData<AllowedItems>(childElementData.codename, items);
 
-            modifiedContent = labelFunction(item, modifiedContent, childElementData, items);
+            if (item) {
+                modifiedContent = labelFunction(item, modifiedContent, childElementData, items);
+            }
         });
 
         return modifiedContent;

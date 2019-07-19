@@ -16,6 +16,29 @@ export const getChildCodenamesFromRichText = (content: string): string[] => {
     return linkedItemCodenames.concat(componentCodenames);
 };
 
+interface IChildInfo {
+    readonly isItem: boolean,
+    readonly codename: string,
+}
+
+export const getChildInfosFromRichText = (content: string): IChildInfo[] => {
+    const root = parser.parse(content);
+    const objectElements = root.querySelectorAll('p');
+
+    const linkedItemInfos = getInnerItemCodenames(objectElements, 'link')
+        .map((codename) => ({
+            codename,
+            isItem: true,
+        }));
+    const componentInfos = getInnerItemCodenames(objectElements, 'component')
+        .map((codename) => ({
+            codename,
+            isItem: false,
+        }));
+
+    return linkedItemInfos.concat(componentInfos);
+};
+
 const getInnerItemCodenames = (elements: HTMLElement[], type: string): string[] =>
     elements
         .filter((objectElement: any) =>
