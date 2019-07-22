@@ -41,14 +41,14 @@ interface IChildElementData {
     readonly element: string;
 }
 
-type ILabelFunction<AllowedItems> = (
-    item: AllowedItems,
+type ILabelFunction<AllowedChildren> = (
+    item: AllowedChildren,
     content: string,
     childElementData: IChildElementData,
     items: unknown,
-) => string
+) => string;
 
-const labelChildren = <AllowedItems>(labelFunction: ILabelFunction<AllowedItems>) =>
+const labelChildren = <AllowedChildren>(labelFunction: ILabelFunction<AllowedChildren>) =>
     (content: string, items: unknown): string => {
         const root = parser.parse(content);
         const objectElements = root.querySelectorAll('p');
@@ -67,7 +67,7 @@ const labelChildren = <AllowedItems>(labelFunction: ILabelFunction<AllowedItems>
         let modifiedContent = content;
 
         childElementsData.forEach((childElementData) => {
-            const item = getItemData<AllowedItems>(childElementData.codename, items);
+            const item = getItemData<AllowedChildren>(childElementData.codename, items);
 
             if (item) {
                 modifiedContent = labelFunction(item, modifiedContent, childElementData, items);

@@ -5,7 +5,6 @@ import {
     OpenApiSpec,
     ParameterLocation,
     ParameterObject,
-    ParameterStyle,
     PathsObject,
     ReferenceObject,
     RequestBodyObject,
@@ -18,6 +17,8 @@ import {
 } from '@loopback/openapi-v3-types';
 import {
     ICategory,
+    ICodeSample,
+    ICodeSamples,
     IContact,
     ILicense,
     IParameter,
@@ -30,11 +31,13 @@ import {
     IZapiSpecification,
 } from 'cloud-docs-shared-code/reference/preprocessedModels';
 import {
-    addProperty,
+    addBooleanProperty,
+    addMultipleChoiceProperty,
+    addNonEmptyStringProperty,
     getChildCodenamesFromRichText,
     getChildInfosFromRichText,
     getItemData,
-    isNonEmptyString,
+    getReferenceObject,
 } from '../utils/helpers';
 import {
     processRichTextWithCallouts,
@@ -69,11 +72,14 @@ const resolveInfoObject = (apiSpecification: IZapiSpecification, items: unknown)
         title: apiSpecification.title,
         version: apiSpecification.version,
     };
+    addNonEmptyStringProperty(apiSpecification.termsOfService, 'termsOfService', infoObject);
+    resolveContactObject(apiSpecification, items, infoObject);
+    resolveLicenseObject(apiSpecification, items, infoObject);
 
-    if (isNonEmptyString(apiSpecification.termsOfService)) {
-        infoObject.termsOfService = apiSpecification.termsOfService;
-    }
+    return infoObject;
+};
 
+const resolveContactObject = (apiSpecification: IZapiSpecification, items: unknown, infoObject: InfoObject): void => {
     if (apiSpecification.contact.length === 1) {
         const contactCodename = apiSpecification.contact[0];
         const contact = getItemData<IContact>(contactCodename, items);
@@ -81,7 +87,9 @@ const resolveInfoObject = (apiSpecification: IZapiSpecification, items: unknown)
 
         infoObject.contact = contactObject;
     }
+};
 
+const resolveLicenseObject = (apiSpecification: IZapiSpecification, items: unknown, infoObject: InfoObject): void => {
     if (apiSpecification.license.length === 1) {
         const licenseCodename = apiSpecification.license[0];
         const license: ILicense = getItemData<ILicense>(licenseCodename, items);
@@ -89,14 +97,19 @@ const resolveInfoObject = (apiSpecification: IZapiSpecification, items: unknown)
 
         infoObject.license = licenseObject;
     }
-
-    return infoObject;
 };
 
 const resolveServerObjects = (serversElement: string, items: unknown): ServerObject[] => {
     const serverCodenames = getChildCodenamesFromRichText(serversElement);
 
-    return serverCodenames.map((codename) => getItemData<IServer>(codename, items));
+    return serverCodenames.map((codename) => {
+        const serverObject = getItemData<IServer>(codename, items);
+
+        return {
+            description: serverObject.description,
+            url: serverObject.url,
+        };
+    });
 };
 
 const resolveTagObjects = (categoriesCodenames: string[], items: unknown): TagObject[] =>
@@ -131,27 +144,51 @@ const resolvePathsObject = (categoriesCodenames: string[], items: unknown): Path
 
     pathOperationsData.forEach((operationData) => {
         const pathOperationObject = getItemData<IPathOperation>(operationData.codename, items);
-        const pathOperation = pathOperationObject.pathOperation[0];
+        const pathOperation = pathOperationObject.pathOperation[0].toLowerCase();
 
-        pathsObject[pathOperationObject.path] = {
-            [pathOperation]: {
-                deprecated: pathOperationObject.deprecated,
-                description: processRichTextWithComponents(pathOperationObject.description, items),
-                operationId: pathOperationObject.url,
-                parameters: resolveParameterObjects(pathOperationObject.parameters, items),
-                summary: pathOperationObject.name,
-                // TODO Check how code samples of pathsObject will be resolved
-                tags: [operationData.categoryName],
-            },
+        // Trim() is here because one path's blank space at the beginning makes YML file invalid
+        const trimmedPath = pathOperationObject.path.trim();
+
+        if (!pathsObject[trimmedPath]) {
+            pathsObject[trimmedPath] = {};
+        }
+
+        pathsObject[trimmedPath][pathOperation] = {
+            description: processRichTextWithComponents(pathOperationObject.description, items),
+            operationId: pathOperationObject.url,
+            parameters: resolveParameterObjects(pathOperationObject.parameters, items),
+            summary: pathOperationObject.name,
+            tags: [operationData.categoryName],
         };
+
+        const path = pathsObject[trimmedPath][pathOperation];
+
+        addBooleanProperty(pathOperationObject.deprecated, 'deprecated', path);
 
         const requestBody = resolveRequestBodyObject(pathOperationObject.requestBody, items);
         if (requestBody) {
-            pathsObject[pathOperationObject.path][pathOperation].requestBody = requestBody;
+            path.requestBody = requestBody;
         }
         const responses = resolveResponseObjects(pathOperationObject.responses, items);
         if (responses) {
-            pathsObject[pathOperationObject.path][pathOperation].responses = responses;
+            path.responses = responses;
+        }
+
+        if (pathOperationObject.codeSamples.length === 1) {
+            const codeSamplesCodename = pathOperationObject.codeSamples[0];
+            const codeSamplesObject = getItemData<ICodeSamples>(codeSamplesCodename, items);
+            const codeSampleCodenames = codeSamplesObject.codeSamples;
+
+            path['x-code-samples'] = codeSampleCodenames.map((codename) => {
+                const codeSampleObject = getItemData<ICodeSample>(codename, items);
+
+                return {
+                    lang: (codeSampleObject.programmingLanguage.length === 1)
+                        ? codeSampleObject.programmingLanguage[0]
+                        : 'not_specified',
+                    source: codeSampleObject.code,
+                };
+            });
         }
     });
 
@@ -161,7 +198,7 @@ const resolvePathsObject = (categoriesCodenames: string[], items: unknown): Path
 const resolveParameterObjects = (codenames: string[], items: unknown): ReferenceObject[] =>
     codenames.map((codename) => getParameterReference(codename, items));
 
-const getParameterReference = (codename, items: unknown) => {
+const getParameterReference = (codename, items: unknown): ReferenceObject => {
     const parameterObject = getItemData<IParameter>(codename, items);
     const name = parameterObject.name;
 
@@ -172,29 +209,17 @@ const getParameterReference = (codename, items: unknown) => {
             name,
         };
 
-        if (parameterObject.deprecated.length === 1) {
-            parameter.deprecated = parameterObject.deprecated[0] === 'true';
-        }
-        if (isNonEmptyString(parameterObject.example)) {
-            parameter.example = parameterObject;
-        }
-        if (parameterObject.required.length === 1) {
-            parameter.required = parameterObject.required[0] === 'true';
-        }
-        if (parameterObject.style.length === 1) {
-            parameter.style = parameterObject.style[0] as ParameterStyle;
-        }
-        if (parameterObject.explode.length === 1) {
-            parameter.explode = parameterObject.explode[0] === 'true';
-        }
+        addNonEmptyStringProperty(parameterObject.example, 'example', parameter);
+        addMultipleChoiceProperty(parameterObject.style, 'style', parameter);
+        addBooleanProperty(parameterObject.deprecated, 'deprecated', parameter);
+        addBooleanProperty(parameterObject.required, 'required', parameter);
+        addBooleanProperty(parameterObject.explode, 'explode', parameter);
         // TODO process schemas
 
         parametersComponents[name] = parameter;
     }
 
-    return {
-        $ref: '#/components/parameters/' + name,
-    };
+    return getReferenceObject('parameters', name);
 };
 
 const resolveRequestBodyObject = (richTextField: string, items: unknown): RequestBodyObject | ReferenceObject => {
@@ -206,24 +231,20 @@ const resolveRequestBodyObject = (richTextField: string, items: unknown): Reques
         // TODO process schemas
         // TODO figure out where to put example element
         const requestBody: RequestBodyObject = {
-            content: {
-                [requestBodyObject.mediaType[0]]: {
-                    schema: 'TODO' as any,
-                },
-            },
+            content: {},
             description: requestBodyObject.description,
         };
-        if (requestBodyObject.required.length === 1) {
-            requestBody.required = requestBodyObject.required[0] === 'true';
-        }
+        requestBody.content[requestBodyObject.mediaType[0]] = {
+            // schema: 'TODO' as any,
+        };
+
+        addBooleanProperty(requestBodyObject.required, 'required', requestBody);
 
         if (requestBodyInfo[0].isItem) {
             const name = 'requestBody_' + codename;
-            requestBodiesComponents['requestBody_' + codename] = requestBody;
+            requestBodiesComponents[name] = requestBody;
 
-            return {
-                $ref: '#/components/requestBodies/' + name,
-            };
+            return getReferenceObject('requestBodies', name);
         } else {
             return requestBody;
         }
@@ -233,16 +254,19 @@ const resolveRequestBodyObject = (richTextField: string, items: unknown): Reques
 const resolveResponseObjects = (richTextField: string, items: unknown): ResponsesObject => {
     const responsesObject: ResponsesObject = {};
 
-    // TODO Add responses to componentsObject if appropriate
     const responsesInfo = getChildInfosFromRichText(richTextField);
     responsesInfo.forEach((responseInfo) => {
         const codename = responseInfo.codename;
         const responseObject = getItemData<IResponse>(codename, items);
+        const headers = resolveHeadersObjects(responseObject.headers, items);
 
         const response: ResponseObject = {
             description: processRichTextWithCallouts(responseObject.description, items),
-            headers: resolveHeadersObjects(responseObject.headers, items),
         };
+
+        if (headers) {
+            response.headers = headers;
+        }
 
         if (responseObject.mediaType.length === 1) {
             response.content = {
@@ -253,23 +277,31 @@ const resolveResponseObjects = (richTextField: string, items: unknown): Response
             };
         }
 
-        responsesObject[responseObject.mediaType[0]] = response;
+        const statusCode = parseInt(responseObject.httpStatus[0], 10);
+        if (responseInfo.isItem) {
+            const name = responseInfo.codename;
+            responseComponents[name] = response;
+
+            responsesObject[statusCode] = getReferenceObject('responses', name);
+        } else {
+            responsesObject[statusCode] = response;
+        }
     });
 
     return responsesObject;
 };
 
-const resolveHeadersObjects = (codenames: string[], items: unknown): HeadersObject => {
-    const headers = {};
-    codenames.forEach((codename) => {
-        const parameterObject = getItemData<IParameter>(codename, items);
-        const name = parameterObject.name;
+const resolveHeadersObjects = (codenames: string[], items: unknown): HeadersObject =>
+    codenames
+        .map((codename) => {
+            const parameterObject = getItemData<IParameter>(codename, items);
+            const name = parameterObject.name;
 
-        headers[name] = getParameterReference(codename, items);
-    });
-
-    return headers;
-};
+            return {
+                [name]: getParameterReference(codename, items),
+            };
+        })
+        .reduce((accumulated, current) => Object.assign(accumulated, current), {});
 
 const resolveComponentsObject = (apiSpecification: IZapiSpecification, items: unknown): ComponentsObject => {
     const securitySchemes = resolveSecuritySchemeObject(apiSpecification, items);
@@ -277,7 +309,7 @@ const resolveComponentsObject = (apiSpecification: IZapiSpecification, items: un
         ? { [securitySchemes.name]: securitySchemes }
         : undefined;
 
-    // TODO Handle all the other component items
+    // TODO Handle all the other component items - are there any more we need, though?
 
     return {
         parameters: parametersComponents,
@@ -293,13 +325,12 @@ const resolveSecuritySchemeObject = (apiSpecification: IZapiSpecification, items
 
         const securityScheme = {
             description: processRichTextWithCallouts(securitySchemeObject.description, items),
-            scheme: securitySchemeObject.scheme,
+            // scheme: securitySchemeObject.scheme, TODO process schemas
             type: securitySchemeObject.type[0] as SecuritySchemeType,
         };
-        const securitySchemeName = securitySchemeObject.name;
-        addProperty(securityScheme, 'name', securitySchemeName);
-        addProperty(securityScheme, 'bearerFormat', securitySchemeObject.bearerFormat);
-        addProperty(securityScheme, 'in', securitySchemeObject.apiKeyLocation);
+        addMultipleChoiceProperty(securitySchemeObject.apiKeyLocation, 'apiKeyLocation', securityScheme);
+        addNonEmptyStringProperty(securitySchemeObject.name, 'name', securityScheme);
+        addNonEmptyStringProperty(securitySchemeObject.bearerFormat, 'bearerFormat', securityScheme);
 
         return securityScheme;
     }

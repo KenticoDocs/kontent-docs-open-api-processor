@@ -5,11 +5,11 @@ const getCalloutMarkStart = (type: string) => `<!--Callout type=${type}-->`;
 const CalloutMarkEnd = '<!--Callout-end-->';
 const CodeSamplesMarkStart = '<!--CodeSamples-->';
 const CodeSamplesMarkEnd = '<!--CodeSamples-end-->';
-const getCodeSampleMarkStart = (programmingLanguage: string[], platform: string[]) => {
-    const programmingLanguages = programmingLanguage.join();
-    const platforms = platform.join();
+const getCodeSampleMarkStart = (programmingLanguages: string[], platforms: string[]) => {
+    const joinedProgrammingLanguages = programmingLanguages.join();
+    const joinedPlatforms = platforms.join();
 
-    return `<!--CodeSample programmingLanguage=${programmingLanguages} platform=${platforms}-->`;
+    return `<!--CodeSample programmingLanguage=${joinedProgrammingLanguages} platform=${joinedPlatforms}-->`;
 };
 const CodeSampleMarkEnd = '<!--CodeSample-end-->';
 

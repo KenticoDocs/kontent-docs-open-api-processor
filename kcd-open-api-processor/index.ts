@@ -2,9 +2,11 @@ import {
     AzureFunction,
     Context,
 } from '@azure/functions';
-import { getBlobFromStorage } from 'cloud-docs-shared-code/getBlobFromStorage';
+import { getBlobFromStorage } from 'cloud-docs-shared-code';
 import { IPreprocessedData } from 'cloud-docs-shared-code/reference/preprocessedModels';
-import { storeReferenceDataToBlobStorage } from '../external/blobManager';
+import OpenAPISchemaValidator from 'openapi-schema-validator';
+import { OpenAPIV3 } from 'openapi-types';
+import * as YAML from 'yamljs';
 import { Configuration } from '../external/configuration';
 import { generateApiSpecification } from '../generate/generateApiSpecification';
 
@@ -20,9 +22,26 @@ const eventGridTrigger: AzureFunction = async (context: Context, eventGridEvent:
             Configuration.keys.azureStorageAccountName,
             Configuration.keys.azureStorageKey,
         );
-        const yaml = generateApiSpecification(blob);
+        const specification = generateApiSpecification(blob);
 
         // await storeReferenceDataToBlobStorage(yaml, blob.zapiSpecificationCodename, blob.operation);
+
+        const validator = new OpenAPISchemaValidator({
+            version: 3,
+        });
+
+        const validationResults = validator.validate(specification as OpenAPIV3.Document);
+
+        if (validationResults.errors.length > 0) {
+            context.log.error(validationResults.errors);
+
+            context.res = {
+                body: validationResults.errors,
+            };
+            return;
+        }
+
+        const yaml = YAML.stringify(specification, 4);
 
         context.res = {
             body: yaml,
