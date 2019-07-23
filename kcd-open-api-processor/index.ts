@@ -32,14 +32,14 @@ const eventGridTrigger: AzureFunction = async (context: Context, eventGridEvent:
 
         const validationResults = validator.validate(specification as OpenAPIV3.Document);
 
-        if (validationResults.errors.length > 0) {
-            context.log.error(validationResults.errors);
-
-            context.res = {
-                body: validationResults.errors,
-            };
-            return;
-        }
+        // if (validationResults.errors.length > 0) {
+        //     context.log.error(validationResults.errors);
+        //
+        //     context.res = {
+        //         body: validationResults.errors,
+        //     };
+        //     return;
+        // }
 
         const yaml = YAML.stringify(specification, 4);
 

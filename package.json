@@ -18,6 +18,7 @@
     "html2commonmark": "^0.6.1",
     "node-html-parser": "^1.1.16",
     "openapi-schema-validator": "^3.0.3",
+    "striptags": "^3.1.1",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {

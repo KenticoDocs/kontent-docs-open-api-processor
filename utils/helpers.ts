@@ -1,9 +1,14 @@
 import { ReferenceObject } from '@loopback/openapi-v3-types';
 
+const striptags = require('striptags');
+
 const parser = require('node-html-parser');
 
-export const isNonEmptyString = (str: string): boolean =>
-    str && str.length > 0;
+export const isNonEmptyString = (text: string): boolean => {
+    const textWithoutTags = striptags(text);
+
+    return textWithoutTags && textWithoutTags.length > 0;
+};
 
 export const getItemData = <DataObject>(codename: string, items: unknown): DataObject =>
     items[codename];
@@ -52,21 +57,3 @@ const getInnerItemCodenames = (elements: HTMLElement[], type: string): string[] 
 export const getReferenceObject = (container: string, name: string): ReferenceObject => ({
     $ref: `#/components/${container}/${name}`,
 });
-
-export const addBooleanProperty = (element: string[], propertyName: string, apiObject: object): void => {
-    if (element.length === 1) {
-        apiObject[propertyName] = element[0] === 'true';
-    }
-};
-
-export const addNonEmptyStringProperty = (element: string, propertyName: string, apiObject: object): void => {
-    if (isNonEmptyString(element)) {
-        apiObject[propertyName] = element;
-    }
-};
-
-export const addMultipleChoiceProperty = (element: string[], propertyName: string, apiObject: object): void => {
-    if (element.length === 1) {
-        apiObject[propertyName] = element[0];
-    }
-};
