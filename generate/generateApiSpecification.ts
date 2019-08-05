@@ -4,7 +4,6 @@ import {
     InfoObject,
     OpenApiSpec,
     ParameterLocation,
-    ParameterObject,
     PathsObject,
     ReferenceObject,
     RequestBodyObject,
@@ -35,18 +34,21 @@ import {
     getBooleanProperty,
     getMultipleChoiceProperty,
     getNonEmptyStringProperty,
+    getSchemaProperty,
 } from '../utils/getProperties';
 import {
     getChildCodenamesFromRichText,
     getChildInfosFromRichText,
     getItemData,
     getReferenceObject,
+    isNonEmptyString,
 } from '../utils/helpers';
 import {
     processRichTextWithCallouts,
     processRichTextWithComponents,
 } from '../utils/richTextProcessing';
 import {
+    getNamedSchema,
     getSchemaObject,
     ISchemas,
 } from './getSchemaObjects';
@@ -208,9 +210,10 @@ const resolveParameterObjects = (codenames: string[], items: unknown): Reference
 const getParameterReference = (codename, items: unknown): ReferenceObject => {
     const parameterData = getItemData<IParameter>(codename, items);
     const name = parameterData.name;
+    const schema = resolveSchemaObjectsInLinkedItems(parameterData.schema, items);
 
     if (!parametersComponents.hasOwnProperty(name)) {
-        const parameterObject: ParameterObject = {
+        parametersComponents[name] = {
             description: processRichTextWithCallouts(parameterData.description, items),
             in: parameterData.location[0] as ParameterLocation,
             name,
@@ -219,12 +222,8 @@ const getParameterReference = (codename, items: unknown): ReferenceObject => {
             ...getBooleanProperty(parameterData.explode, 'explode'),
             ...getNonEmptyStringProperty(parameterData.example, 'example'),
             ...getMultipleChoiceProperty(parameterData.style, 'style'),
+            ...getSchemaProperty(schema, 'schema'),
         };
-
-        // TODO process schemas
-        const schema = resolveSchemaObjectsInLinkedItems(parameterData.schema, items);
-
-        parametersComponents[name] = parameterObject;
     }
 
     return getReferenceObject('parameters', name);
@@ -238,7 +237,6 @@ const resolveRequestBodyObject = (richTextField: string, items: unknown): Reques
 
         const schema = resolveSchemaObjectsInRichTextElement(requestBodyData.schema, items);
 
-        // TODO process schemas
         // TODO figure out where to put example element
         const requestBodyObject: RequestBodyObject = {
             content: {},
@@ -246,7 +244,7 @@ const resolveRequestBodyObject = (richTextField: string, items: unknown): Reques
             ...getBooleanProperty(requestBodyData.required, 'required'),
         };
         requestBodyObject.content[requestBodyData.mediaType[0]] = {
-            // schema: 'TODO' as any,
+            ...getSchemaProperty(schema, 'schema'),
         };
 
         if (requestBodyInfo[0].isItem) {
@@ -282,7 +280,7 @@ const resolveResponseObjects = (richTextField: string, items: unknown): Response
         if (responseData.mediaType.length === 1) {
             responseObject.content = {
                 [responseData.mediaType[0]]: {
-                    // schema: ... TODO process schemas
+                    ...getSchemaProperty(schema, 'schema'),
                     example: responseData.example,
                 },
             };
@@ -347,35 +345,34 @@ const resolveSecuritySchemeObject = (apiSpecification: IZapiSpecification, items
 };
 
 // TODO Budem ukladat schemy pod ich NAME ak sa bude dat, inak pod codename ??
-
 export const resolveSchemaObjectsInLinkedItems = (element: string[], items: unknown): SchemaObject[] => {
-    const schema = {};
+    const schemas = [];
     element.map((codename) => {
         const schemaData = getItemData<ISchemas>(codename, items);
+        const identifier = isNonEmptyString(schemaData.name) ? schemaData.name : codename;
 
-        // process schema object rekurzive
-        const schemaObject = getSchemaObject(schemaData, items);
-
-        schemasComponents[schemaData.name] = schemaObject;
+        schemasComponents[identifier] = getSchemaObject(schemaData, items);
+        schemas.push(getReferenceObject('schemas', identifier));
     });
 
-    // vzdy vloz do components
-    return [schema];
+    return schemas;
 };
 
 export const resolveSchemaObjectsInRichTextElement = (element: string, items: unknown): SchemaObject[] => {
-    const schema = {};
+    const schemas = [];
     const schemasInfo = getChildInfosFromRichText(element);
 
     schemasInfo.forEach((schemaInfo) => {
         const schemaData = getItemData<ISchemas>(schemaInfo.codename, items);
+        const identifier = isNonEmptyString(schemaData.name) ? schemaData.name : schemaInfo.codename;
 
-        // process schema object rekurzive
-        const schemaObject = getSchemaObject(schemaData, items);
-
-        schemasComponents[schemaData.name] = schemaObject;
+        if (schemaInfo.isItem) {
+            schemasComponents[identifier] = getSchemaObject(schemaData, items);
+            schemas.push(getReferenceObject('schemas', identifier));
+        } else {
+            schemas.push(getNamedSchema(schemaData, identifier, items));
+        }
     });
 
-    // ak je to item tak vloz do components
-    return [schema];
+    return schemas;
 };

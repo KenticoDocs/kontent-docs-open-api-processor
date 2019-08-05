@@ -26,6 +26,7 @@ import {
     getNonEmptyStringProperty,
     getNumberProperty,
     getRequiredProperty,
+    getSchemaProperty,
 } from '../utils/getProperties';
 import {
     getChildInfosFromRichText,
@@ -48,12 +49,12 @@ export type ISchemas =
     | ISchemaString
     | IPropertyReferencingASchema;
 
-// TODO maybe will not be needed
-export const getNamedSchema = (schemaData: ISchemas, items: unknown): any => {
+// TODO Probably will be needed
+export const getNamedSchema = (schemaData: ISchemas, identifier: string, items: unknown): any => {
     const schemaObject = getSchemaObject(schemaData, items);
 
     return {
-        [schemaData.name]: schemaObject,
+        [identifier]: schemaObject,
     };
 };
 
@@ -97,18 +98,18 @@ export const getSchemaObject = (schemaData: ISchemas, items: unknown): SchemaObj
 
 const getSchemaAllOfObject = (schemaData: ISchemaAllOf, items: unknown): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
-    allOf: resolveSchemaObjectsInRichTextElement(schemaData.schemas, items),
+    ...getSchemaProperty(resolveSchemaObjectsInRichTextElement(schemaData.schemas, items), 'allOf'),
 });
 
 const getSchemaAnyOfObject = (schemaData: ISchemaAnyOf, items: unknown): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getSchemaObjectPropertyElements(schemaData),
-    anyOf: resolveSchemaObjectsInLinkedItems(schemaData.schemas, items),
+    ...getSchemaProperty(resolveSchemaObjectsInLinkedItems(schemaData.schemas, items), 'anyOf'),
 });
 
 const getSchemaArrayObject = (schemaData: ISchemaArray, items: unknown): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
-    items: resolveSchemaObjectsInRichTextElement(schemaData.items, items),
+    ...getSchemaProperty(resolveSchemaObjectsInRichTextElement(schemaData.items, items), 'items'),
     ...getBooleanProperty(schemaData.uniqueItems, 'uniqueItems'),
     type: 'array',
 });
@@ -141,22 +142,22 @@ const getSchemaNumberObject = (schemaData: ISchemaNumber, items: unknown): Schem
 });
 
 const getSchemaObjectObject = (schemaData: ISchemaObject, items: unknown): SchemaObject => {
-    const schema = {
+    const properties = resolveSchemaObjectsInRichTextElement(schemaData.properties, items);
+    const additionalProperties = resolveSchemaObjectsInRichTextElement(schemaData.additionalProperties, items);
+
+    return {
         ...getSchemaCommonElements(schemaData, items),
         ...getRequiredProperty(schemaData.required, 'required'),
+        ...getSchemaProperty(properties, 'properties'),
+        ...getSchemaProperty(additionalProperties, 'additionalProperties'),
         type: 'object',
     };
-
-    resolveSchemaObjectsInRichTextElement(schemaData.properties, items);
-    resolveSchemaObjectsInRichTextElement(schemaData.additionalProperties, items);
-
-    return schema;
 };
 
 const getSchemaOneOfObject = (schemaData: ISchemaOneOf, items: unknown): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getDiscriminatorProperty(schemaData.discriminator, 'discriminator', items),
-    oneOf: resolveSchemaObjectsInLinkedItems(schemaData.schemas, items),
+    ...getSchemaProperty(resolveSchemaObjectsInLinkedItems(schemaData.schemas, items), 'oneOf'),
 });
 
 const getSchemaStringObject = (schemaData: ISchemaString, items: unknown): SchemaObject => ({
@@ -172,7 +173,7 @@ const getSchemaStringObject = (schemaData: ISchemaString, items: unknown): Schem
 
 const getPropertyReferencingObject = (data: IPropertyReferencingASchema, items: unknown): SchemaObject => ({
     name: data.name,
-    schema: resolveSchemaObjectsInLinkedItems(data.schema, items)[0],
+    ...getSchemaProperty(resolveSchemaObjectsInLinkedItems(data.schema, items), 'schema'),
 });
 
 interface ISchemaObjectCommonElements {

@@ -1,4 +1,7 @@
-import { DiscriminatorObject } from '@loopback/openapi-v3-types';
+import {
+    DiscriminatorObject,
+    SchemaObject,
+} from '@loopback/openapi-v3-types';
 import { resolveDiscriminatorObject } from '../generate/getSchemaObjects';
 import { isNonEmptyString } from './helpers';
 import { processRichTextWithCallouts } from './richTextProcessing';
@@ -69,3 +72,17 @@ export const getDiscriminatorProperty = (
         isNonEmptyString,
         (x) => resolveDiscriminatorObject(x, items))
     (field, propertyName);
+
+export const getSchemaProperty = (element: SchemaObject[], propertyName: string): any => {
+    switch (element.length) {
+        case 0: {
+            return {};
+        }
+        case 1: {
+            return { [propertyName]: element[0] };
+        }
+        default: {
+            return { [propertyName]: element };
+        }
+    }
+};

@@ -32,6 +32,7 @@ const eventGridTrigger: AzureFunction = async (context: Context, eventGridEvent:
 
         const validationResults = validator.validate(specification as OpenAPIV3.Document);
 
+        // TODO napoj na notifiera
         // if (validationResults.errors.length > 0) {
         //     context.log.error(validationResults.errors);
         //
