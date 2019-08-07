@@ -16,17 +16,22 @@ const parser = require('node-html-parser');
 export const processRichTextWithComponents = (richTextField: string, items: unknown) => {
     const richTextWithLabelledChildren = labelChildren<ICallout | ICodeSamples | ICodeSample>(
         labelAnyChildItems)(richTextField, items);
+    const sanitizedRichText = sanitizeRichText(richTextWithLabelledChildren);
 
-    return convertToCommonMark(richTextWithLabelledChildren);
+    return convertToCommonMark(sanitizedRichText);
+    // return sanitizedRichText;
 };
 
 export const processRichTextWithCallouts = (richTextField: string, items: unknown) => {
     const richTextWithLabelledChildren = labelChildren<ICallout>(
         labelChildCallouts)(richTextField, items);
+    const sanitizedRichText = sanitizeRichText(richTextWithLabelledChildren);
 
-    return convertToCommonMark(richTextWithLabelledChildren);
+    return convertToCommonMark(sanitizedRichText);
+    // return sanitizedRichText;
 };
 
+// TODO Decide if we want to keep using commonMark
 const convertToCommonMark = (html: string): string => {
     const converter = new html2commonmark.JSDomConverter();
     const renderer = new html2commonmark.Renderer();
@@ -120,3 +125,7 @@ const labelChildCallouts = (
 
     return content;
 };
+
+export const sanitizeRichText = (content: string): string =>
+    content.replace(/({~)/g, '<code>')
+        .replace(/(~})/g, '</code>');

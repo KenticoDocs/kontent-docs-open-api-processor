@@ -7,11 +7,14 @@ const CodeSamplesMarkStart = '<!--CodeSamples-->';
 const CodeSamplesMarkEnd = '<!--CodeSamples-end-->';
 const getCodeSampleMarkStart = (programmingLanguages: string[], platforms: string[]) => {
     const joinedProgrammingLanguages = programmingLanguages.join();
+    // TODO preved code highlighter z "KC" nazvov na nazvy ktore podporuje HTML
+    const syntaxHighlighter = programmingLanguages.length > 0 ? programmingLanguages[0] : null;
     const joinedPlatforms = platforms.join();
 
-    return `<!--CodeSample programmingLanguage=${joinedProgrammingLanguages} platform=${joinedPlatforms}-->`;
+    return `<!--CodeSample programmingLanguage=${joinedProgrammingLanguages}
+                platform=${joinedPlatforms}--><pre><code class=\"${syntaxHighlighter} language-${syntaxHighlighter}\">`;
 };
-const CodeSampleMarkEnd = '<!--CodeSample-end-->';
+const CodeSampleMarkEnd = '</code></pre><!--CodeSample-end-->';
 
 export const getLabelledCallout = (content: string, type: string): string =>
     getCalloutMarkStart(type) + content + CalloutMarkEnd;

@@ -123,7 +123,7 @@ const getSchemaBooleanObject = (schemaData: ISchemaBoolean, items: unknown): Sch
 const getSchemaIntegerObject = (schemaData: ISchemaInteger, items: unknown): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getSchemaObjectPropertyElements(schemaData),
-    ...getNonEmptyStringProperty(schemaData.acceptedValues, 'acceptedValues'),
+    ...getNonEmptyStringProperty(schemaData.acceptedValues, 'enum'),
     ...getMultipleChoiceProperty(schemaData.format, 'format'),
     ...getNumberProperty(schemaData.defaultValue, 'default'),
     ...getNumberProperty(schemaData.minimum, 'minimum'),
@@ -134,7 +134,7 @@ const getSchemaIntegerObject = (schemaData: ISchemaInteger, items: unknown): Sch
 const getSchemaNumberObject = (schemaData: ISchemaNumber, items: unknown): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getSchemaObjectPropertyElements(schemaData),
-    ...getNonEmptyStringProperty(schemaData.acceptedValues, 'acceptedValues'),
+    ...getNonEmptyStringProperty(schemaData.acceptedValues, 'enum'),
     ...getMultipleChoiceProperty(schemaData.format, 'format'),
     ...getNumberProperty(schemaData.minimum, 'minimum'),
     ...getNumberProperty(schemaData.maximum, 'maximum'),
@@ -163,7 +163,7 @@ const getSchemaOneOfObject = (schemaData: ISchemaOneOf, items: unknown): SchemaO
 const getSchemaStringObject = (schemaData: ISchemaString, items: unknown): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getSchemaObjectPropertyElements(schemaData),
-    ...getNonEmptyStringProperty(schemaData.acceptedValues, 'acceptedValues'),
+    ...getNonEmptyStringProperty(schemaData.acceptedValues, 'enum'),
     ...getNonEmptyStringProperty(schemaData.format, 'format'),
     ...getNonEmptyStringProperty(schemaData.defaultValue, 'default'),
     ...getNumberProperty(schemaData.minLength, 'minLength'),
@@ -171,10 +171,9 @@ const getSchemaStringObject = (schemaData: ISchemaString, items: unknown): Schem
     type: 'string',
 });
 
-const getPropertyReferencingObject = (data: IPropertyReferencingASchema, items: unknown): SchemaObject => ({
-    name: data.name,
-    ...getSchemaProperty(resolveSchemaObjectsInLinkedItems(data.schema, items), 'schema'),
-});
+const getPropertyReferencingObject = (data: IPropertyReferencingASchema, items: unknown): SchemaObject =>
+    // Element is required to have exactly 1 schema item inserted
+    resolveSchemaObjectsInLinkedItems(data.schema, items)[0];
 
 interface ISchemaObjectCommonElements {
     readonly description?: string,

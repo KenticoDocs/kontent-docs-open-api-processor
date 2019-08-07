@@ -1,5 +1,6 @@
 import {
     DiscriminatorObject,
+    HeadersObject,
     SchemaObject,
 } from '@loopback/openapi-v3-types';
 import { resolveDiscriminatorObject } from '../generate/getSchemaObjects';
@@ -63,6 +64,12 @@ export const getNumberProperty = (element: number, propertyName: string): IObjec
         (x) => x)
     (element, propertyName);
 
+export const getHeadersProperty = (element: HeadersObject, propertyName: string): IObjectWithProperty | {} =>
+    getGenericProperty<HeadersObject, HeadersObject>(
+        (headersObject) => Object.keys(headersObject).length > 0,
+        (headersObject) => headersObject,
+    )(element, propertyName);
+
 export const getDiscriminatorProperty = (
     field: string,
     propertyName: string,
@@ -73,15 +80,21 @@ export const getDiscriminatorProperty = (
         (x) => resolveDiscriminatorObject(x, items))
     (field, propertyName);
 
-export const getSchemaProperty = (element: SchemaObject[], propertyName: string): any => {
-    switch (element.length) {
+export const getSchemaProperty = (element: SchemaObject, propertyName: string): any => {
+    switch (Object.keys(element).length) {
         case 0: {
             return {};
         }
         case 1: {
-            return { [propertyName]: element[0] };
+            return { [propertyName]: element[Object.keys(element)[0]] };
         }
         default: {
+            // const keys = element.map((schema, index) => {
+            //     return schema[index].keys() ? schema[index].keys()[0] : undefined;
+            // });
+            // const schemaObject = {};
+            // keys.forEach((key, index) => schemaObject[key] = element[index][key]);
+
             return { [propertyName]: element };
         }
     }

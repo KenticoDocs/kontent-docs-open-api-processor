@@ -32,6 +32,7 @@ import {
 } from 'cloud-docs-shared-code/reference/preprocessedModels';
 import {
     getBooleanProperty,
+    getHeadersProperty,
     getMultipleChoiceProperty,
     getNonEmptyStringProperty,
     getSchemaProperty,
@@ -48,7 +49,6 @@ import {
     processRichTextWithComponents,
 } from '../utils/richTextProcessing';
 import {
-    getNamedSchema,
     getSchemaObject,
     ISchemas,
 } from './getSchemaObjects';
@@ -269,11 +269,8 @@ const resolveResponseObjects = (richTextField: string, items: unknown): Response
 
         const responseObject: ResponseObject = {
             description: processRichTextWithCallouts(responseData.description, items),
+            ...getHeadersProperty(headers, 'headers'),
         };
-
-        if (headers) {
-            responseObject.headers = headers;
-        }
 
         const schema = resolveSchemaObjectsInRichTextElement(responseData.schema, items);
 
@@ -358,8 +355,8 @@ export const resolveSchemaObjectsInLinkedItems = (element: string[], items: unkn
     return schemas;
 };
 
-export const resolveSchemaObjectsInRichTextElement = (element: string, items: unknown): SchemaObject[] => {
-    const schemas = [];
+export const resolveSchemaObjectsInRichTextElement = (element: string, items: unknown): SchemaObject => {
+    const schemas = {};
     const schemasInfo = getChildInfosFromRichText(element);
 
     schemasInfo.forEach((schemaInfo) => {
@@ -368,9 +365,9 @@ export const resolveSchemaObjectsInRichTextElement = (element: string, items: un
 
         if (schemaInfo.isItem) {
             schemasComponents[identifier] = getSchemaObject(schemaData, items);
-            schemas.push(getReferenceObject('schemas', identifier));
+            schemas[identifier] = (getReferenceObject('schemas', identifier));
         } else {
-            schemas.push(getNamedSchema(schemaData, identifier, items));
+            schemas[identifier] = getSchemaObject(schemaData, items);
         }
     });
 
