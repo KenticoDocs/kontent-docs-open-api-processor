@@ -5,7 +5,7 @@ import { Configuration } from './configuration';
 const BlobStorage = require('@azure/storage-blob');
 
 export const storeReferenceDataToBlobStorage = async (
-    dataBlob: any,
+    dataBlob: string,
     codename: string,
     operation: ReferenceOperation,
 ): Promise<void> => {
@@ -34,7 +34,7 @@ const getContainerUrl = (): ContainerURL => {
         pipeline,
     );
 
-    return BlobStorage.ContainerURL.fromServiceURL(serviceUrl, Configuration.keys.azureContainerName);
+    return BlobStorage.ContainerURL.fromServiceURL(serviceUrl, Configuration.keys.azureOutputContainerName);
 };
 
 export const getBlobId = (codename: string, operation: ReferenceOperation): string => {

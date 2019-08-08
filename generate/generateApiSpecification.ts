@@ -1,10 +1,10 @@
 import {
+    BaseParameterObject,
     ComponentsObject,
     HeadersObject,
     InfoObject,
     OpenApiSpec,
     ParameterLocation,
-    PathsObject,
     ReferenceObject,
     RequestBodyObject,
     ResponseObject,
@@ -17,12 +17,9 @@ import {
 } from '@loopback/openapi-v3-types';
 import {
     ICategory,
-    ICodeSample,
-    ICodeSamples,
     IContact,
     ILicense,
     IParameter,
-    IPathOperation,
     IPreprocessedData,
     IRequestBody,
     IResponse,
@@ -48,6 +45,7 @@ import {
     processRichTextWithCallouts,
     processRichTextWithComponents,
 } from '../utils/richTextProcessing';
+import { resolvePathsObject } from './getPathsObject';
 import {
     getSchemaObject,
     ISchemas,
@@ -132,119 +130,76 @@ const resolveTagObjects = (categoriesCodenames: string[], items: unknown): TagOb
         };
     });
 
-interface IPathOperationData {
-    readonly categoryName: string;
-    readonly codename: string;
-}
-
-const resolvePathsObject = (categoriesCodenames: string[], items: unknown): PathsObject => {
-    const pathsObject = {};
-    const pathOperationsData = new Set<IPathOperationData>();
-
-    categoriesCodenames.forEach((codename) => {
-        const categoryData = getItemData<ICategory>(codename, items);
-
-        categoryData.pathOperations.forEach((pathOperationCodename) => {
-            pathOperationsData.add({
-                categoryName: categoryData.name,
-                codename: pathOperationCodename,
-            });
-        });
-    });
-
-    pathOperationsData.forEach((operationData) => {
-        const pathOperationData = getItemData<IPathOperation>(operationData.codename, items);
-        const pathOperation = pathOperationData.pathOperation[0].toLowerCase();
-
-        // Trim() is here because one path's blank space at the beginning makes YML file invalid - contact Honza?
-        const trimmedPath = pathOperationData.path.trim();
-
-        if (!pathsObject[trimmedPath]) {
-            pathsObject[trimmedPath] = {};
-        }
-
-        pathsObject[trimmedPath][pathOperation] = {
-            description: processRichTextWithComponents(pathOperationData.description, items),
-            operationId: pathOperationData.url,
-            parameters: resolveParameterObjects(pathOperationData.parameters, items),
-            summary: pathOperationData.name,
-            tags: [operationData.categoryName],
-            ...getBooleanProperty(pathOperationData.deprecated, 'deprecated'),
-        };
-
-        const path = pathsObject[trimmedPath][pathOperation];
-
-        const requestBody = resolveRequestBodyObject(pathOperationData.requestBody, items);
-        if (requestBody) {
-            path.requestBody = requestBody;
-        }
-        const responses = resolveResponseObjects(pathOperationData.responses, items);
-        if (responses) {
-            path.responses = responses;
-        }
-
-        if (pathOperationData.codeSamples.length === 1) {
-            const codeSamplesCodename = pathOperationData.codeSamples[0];
-            const codeSamplesObject = getItemData<ICodeSamples>(codeSamplesCodename, items);
-            const codeSampleCodenames = codeSamplesObject.codeSamples;
-
-            path['x-code-samples'] = codeSampleCodenames.map((codename) => {
-                const codeSampleObject = getItemData<ICodeSample>(codename, items);
-
-                return {
-                    lang: (codeSampleObject.programmingLanguage.length === 1)
-                        ? codeSampleObject.programmingLanguage[0]
-                        : 'not_specified',
-                    source: codeSampleObject.code,
-                };
-            });
-        }
-    });
-
-    return pathsObject;
-};
-
-const resolveParameterObjects = (codenames: string[], items: unknown): ReferenceObject[] =>
-    codenames.map((codename) => getParameterReference(codename, items));
-
-const getParameterReference = (codename, items: unknown): ReferenceObject => {
+export const getParameterReference = (codename, items: unknown): ReferenceObject => {
     const parameterData = getItemData<IParameter>(codename, items);
     const name = parameterData.name;
     const schema = resolveSchemaObjectsInLinkedItems(parameterData.schema, items);
 
     if (!parametersComponents.hasOwnProperty(name)) {
-        parametersComponents[name] = {
+        const parameterObject: BaseParameterObject = {
             description: processRichTextWithCallouts(parameterData.description, items),
             in: parameterData.location[0] as ParameterLocation,
             name,
             ...getBooleanProperty(parameterData.deprecated, 'deprecated'),
             ...getBooleanProperty(parameterData.required, 'required'),
             ...getBooleanProperty(parameterData.explode, 'explode'),
-            ...getNonEmptyStringProperty(parameterData.example, 'example'),
             ...getMultipleChoiceProperty(parameterData.style, 'style'),
             ...getSchemaProperty(schema, 'schema'),
         };
+        resolveParameterExample(parameterData, parameterObject, items);
+
+        parametersComponents[name] = parameterObject;
     }
 
     return getReferenceObject('parameters', name);
 };
 
-const resolveRequestBodyObject = (richTextField: string, items: unknown): RequestBodyObject | ReferenceObject => {
+const resolveParameterExample = (
+    parameterData: IParameter,
+    parameterObject: BaseParameterObject,
+    items: unknown,
+): void => {
+    const schemaData = getItemData<ISchemas>(parameterData.schema[0], items);
+    const schemaType = schemaData.contentType;
+    const exampleValue = parameterData.example;
+    if (exampleValue) {
+        switch (schemaType) {
+            case 'zapi_schema__integer':
+            case 'zapi_schema__number': {
+                parameterObject.example = parseInt(exampleValue, 10);
+                break;
+            }
+            case 'zapi_schema__boolean': {
+                parameterObject.example = exampleValue === 'true';
+                break;
+            }
+            default: {
+                parameterObject.example = exampleValue;
+                break;
+            }
+        }
+    }
+};
+
+export const resolveRequestBodyObject = (
+    richTextField: string,
+    items: unknown,
+): RequestBodyObject | ReferenceObject => {
     const requestBodyInfo = getChildInfosFromRichText(richTextField);
     if (requestBodyInfo.length === 1) {
         const codename = requestBodyInfo[0].codename;
         const requestBodyData = getItemData<IRequestBody>(codename, items);
-
         const schema = resolveSchemaObjectsInRichTextElement(requestBodyData.schema, items);
 
-        // TODO figure out where to put example element
         const requestBodyObject: RequestBodyObject = {
             content: {},
             description: requestBodyData.description,
             ...getBooleanProperty(requestBodyData.required, 'required'),
+
         };
         requestBodyObject.content[requestBodyData.mediaType[0]] = {
             ...getSchemaProperty(schema, 'schema'),
+            ...getNonEmptyStringProperty(requestBodyData.example, 'example'),
         };
 
         if (requestBodyInfo[0].isItem) {
@@ -258,7 +213,7 @@ const resolveRequestBodyObject = (richTextField: string, items: unknown): Reques
     }
 };
 
-const resolveResponseObjects = (richTextField: string, items: unknown): ResponsesObject => {
+export const resolveResponseObjects = (richTextField: string, items: unknown): ResponsesObject => {
     const responsesObject: ResponsesObject = {};
 
     const responsesInfo = getChildInfosFromRichText(richTextField);
@@ -287,7 +242,6 @@ const resolveResponseObjects = (richTextField: string, items: unknown): Response
         if (responseInfo.isItem) {
             const name = responseInfo.codename;
             responseComponents[name] = responseObject;
-
             responsesObject[statusCode] = getReferenceObject('responses', name);
         } else {
             responsesObject[statusCode] = responseObject;
@@ -315,8 +269,6 @@ const resolveComponentsObject = (apiSpecification: IZapiSpecification, items: un
         ? { [securitySchemes.name]: securitySchemes }
         : {};
 
-    // TODO Handle all the other component items - are there any more we need, though?
-
     return {
         parameters: parametersComponents,
         requestBodies: requestBodiesComponents,
@@ -341,7 +293,6 @@ const resolveSecuritySchemeObject = (apiSpecification: IZapiSpecification, items
     }
 };
 
-// TODO Budem ukladat schemy pod ich NAME ak sa bude dat, inak pod codename ??
 export const resolveSchemaObjectsInLinkedItems = (element: string[], items: unknown): SchemaObject[] => {
     const schemas = [];
     element.map((codename) => {

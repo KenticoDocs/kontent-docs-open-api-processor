@@ -9,7 +9,7 @@
     "start:host": "func start",
     "start": "npm run start:host & npm run watch",
     "build:production": "npm run prestart && npm prune --production",
-    "test": "echo \"No tests yet...\"",
+    "test": "jest",
     "tslint": "tslint --project tsconfig.json"
   },
   "dependencies": {

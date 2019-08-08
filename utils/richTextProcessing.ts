@@ -18,8 +18,8 @@ export const processRichTextWithComponents = (richTextField: string, items: unkn
         labelAnyChildItems)(richTextField, items);
     const sanitizedRichText = sanitizeRichText(richTextWithLabelledChildren);
 
-    return convertToCommonMark(sanitizedRichText);
-    // return sanitizedRichText;
+    // return convertToCommonMark(sanitizedRichText);
+    return sanitizedRichText;
 };
 
 export const processRichTextWithCallouts = (richTextField: string, items: unknown) => {
@@ -27,11 +27,11 @@ export const processRichTextWithCallouts = (richTextField: string, items: unknow
         labelChildCallouts)(richTextField, items);
     const sanitizedRichText = sanitizeRichText(richTextWithLabelledChildren);
 
-    return convertToCommonMark(sanitizedRichText);
-    // return sanitizedRichText;
+    // return convertToCommonMark(sanitizedRichText);
+    return sanitizedRichText;
 };
 
-// TODO Decide if we want to keep using commonMark
+// TODO Nekonvertuj code samply na common mark
 const convertToCommonMark = (html: string): string => {
     const converter = new html2commonmark.JSDomConverter();
     const renderer = new html2commonmark.Renderer();

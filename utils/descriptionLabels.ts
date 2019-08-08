@@ -19,7 +19,7 @@ const CodeSampleMarkEnd = '</code></pre><!--CodeSample-end-->';
 export const getLabelledCallout = (content: string, type: string): string =>
     getCalloutMarkStart(type) + content + CalloutMarkEnd;
 
-// TODO wrap code sample in a markdown§s codeblock with specified language for syntax highlighting
+// TODO wrap code sample in a markdown's codeblock with specified language for syntax highlighting
 export const getLabelledCodeSample = (content: string, programmingLanguage: string[], platform: string[]) =>
     getCodeSampleMarkStart(programmingLanguage, platform) + content + CodeSampleMarkEnd;
 

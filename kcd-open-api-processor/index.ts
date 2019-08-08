@@ -2,29 +2,35 @@ import {
     AzureFunction,
     Context,
 } from '@azure/functions';
-import { getBlobFromStorage } from 'cloud-docs-shared-code';
+import {
+    getBlobContainerName,
+    getBlobFromStorage,
+    IBlobEventGridEvent,
+} from 'cloud-docs-shared-code';
 import { IPreprocessedData } from 'cloud-docs-shared-code/reference/preprocessedModels';
 import OpenAPISchemaValidator from 'openapi-schema-validator';
 import { OpenAPIV3 } from 'openapi-types';
 import * as YAML from 'yamljs';
+import { storeReferenceDataToBlobStorage } from '../external/blobManager';
 import { Configuration } from '../external/configuration';
 import { generateApiSpecification } from '../generate/generateApiSpecification';
 
-const eventGridTrigger: AzureFunction = async (context: Context, eventGridEvent: any): Promise<any> => {
+const eventGridEvent: AzureFunction = async (
+    context: Context,
+    event: IBlobEventGridEvent,
+): Promise<void> => {
     try {
-        // const container = getBlobContainerName(eventGridEvent.body);
-        // const isTest = container.includes('test');
+        const container = getBlobContainerName(event);
+        const isTest = container.includes('test');
 
-        Configuration.set(false);
+        Configuration.set(isTest);
 
         const blob = await getBlobFromStorage<IPreprocessedData>(
-            eventGridEvent.body.data.url,
+            event.data.url,
             Configuration.keys.azureStorageAccountName,
             Configuration.keys.azureStorageKey,
         );
         const specification = generateApiSpecification(blob);
-
-        // await storeReferenceDataToBlobStorage(yaml, blob.zapiSpecificationCodename, blob.operation);
 
         const validator = new OpenAPISchemaValidator({
             version: 3,
@@ -42,7 +48,12 @@ const eventGridTrigger: AzureFunction = async (context: Context, eventGridEvent:
         //     return;
         // }
 
-        const yaml = YAML.stringify(specification, 4);
+        const yaml = YAML
+            .stringify(specification, 12, 2)
+            // Formats array of objects nicely, see https://github.com/jeremyfa/yaml.js/issues/117
+            .replace(/(\s+\-)\s*\n\s+/g, '$1 ');
+
+        await storeReferenceDataToBlobStorage(yaml, blob.zapiSpecificationCodename, blob.operation);
 
         context.res = {
             body: yaml,
@@ -53,4 +64,4 @@ const eventGridTrigger: AzureFunction = async (context: Context, eventGridEvent:
     }
 };
 
-export default eventGridTrigger;
+export default eventGridEvent;

@@ -19,13 +19,13 @@ import {
     ISchemaString,
 } from 'cloud-docs-shared-code';
 import {
+    getArrayPropertyFromString,
     getBooleanProperty,
     getDescriptionProperty,
     getDiscriminatorProperty,
     getMultipleChoiceProperty,
     getNonEmptyStringProperty,
     getNumberProperty,
-    getRequiredProperty,
     getSchemaProperty,
 } from '../utils/getProperties';
 import {
@@ -48,15 +48,6 @@ export type ISchemas =
     | ISchemaOneOf
     | ISchemaString
     | IPropertyReferencingASchema;
-
-// TODO Probably will be needed
-export const getNamedSchema = (schemaData: ISchemas, identifier: string, items: unknown): any => {
-    const schemaObject = getSchemaObject(schemaData, items);
-
-    return {
-        [identifier]: schemaObject,
-    };
-};
 
 export const getSchemaObject = (schemaData: ISchemas, items: unknown): SchemaObject => {
     switch (schemaData.contentType) {
@@ -123,7 +114,7 @@ const getSchemaBooleanObject = (schemaData: ISchemaBoolean, items: unknown): Sch
 const getSchemaIntegerObject = (schemaData: ISchemaInteger, items: unknown): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getSchemaObjectPropertyElements(schemaData),
-    ...getNonEmptyStringProperty(schemaData.acceptedValues, 'enum'),
+    ...getArrayPropertyFromString(schemaData.acceptedValues, 'enum'),
     ...getMultipleChoiceProperty(schemaData.format, 'format'),
     ...getNumberProperty(schemaData.defaultValue, 'default'),
     ...getNumberProperty(schemaData.minimum, 'minimum'),
@@ -134,7 +125,7 @@ const getSchemaIntegerObject = (schemaData: ISchemaInteger, items: unknown): Sch
 const getSchemaNumberObject = (schemaData: ISchemaNumber, items: unknown): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getSchemaObjectPropertyElements(schemaData),
-    ...getNonEmptyStringProperty(schemaData.acceptedValues, 'enum'),
+    ...getArrayPropertyFromString(schemaData.acceptedValues, 'enum'),
     ...getMultipleChoiceProperty(schemaData.format, 'format'),
     ...getNumberProperty(schemaData.minimum, 'minimum'),
     ...getNumberProperty(schemaData.maximum, 'maximum'),
@@ -147,7 +138,7 @@ const getSchemaObjectObject = (schemaData: ISchemaObject, items: unknown): Schem
 
     return {
         ...getSchemaCommonElements(schemaData, items),
-        ...getRequiredProperty(schemaData.required, 'required'),
+        ...getArrayPropertyFromString(schemaData.required, 'required'),
         ...getSchemaProperty(properties, 'properties'),
         ...getSchemaProperty(additionalProperties, 'additionalProperties'),
         type: 'object',
@@ -163,7 +154,7 @@ const getSchemaOneOfObject = (schemaData: ISchemaOneOf, items: unknown): SchemaO
 const getSchemaStringObject = (schemaData: ISchemaString, items: unknown): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getSchemaObjectPropertyElements(schemaData),
-    ...getNonEmptyStringProperty(schemaData.acceptedValues, 'enum'),
+    ...getArrayPropertyFromString(schemaData.acceptedValues, 'enum'),
     ...getNonEmptyStringProperty(schemaData.format, 'format'),
     ...getNonEmptyStringProperty(schemaData.defaultValue, 'default'),
     ...getNumberProperty(schemaData.minLength, 'minLength'),

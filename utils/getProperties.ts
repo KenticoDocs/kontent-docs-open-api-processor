@@ -52,7 +52,7 @@ export const getBooleanProperty = (element: string[], propertyName: string): IOb
         (x) => x[0] === 'true')
     (element, propertyName);
 
-export const getRequiredProperty = (element: string, propertyName: string): IObjectWithProperty | {} =>
+export const getArrayPropertyFromString = (element: string, propertyName: string): IObjectWithProperty | {} =>
     getGenericProperty<string, string[]>(
         isNonEmptyString,
         (x) => x.split(','))

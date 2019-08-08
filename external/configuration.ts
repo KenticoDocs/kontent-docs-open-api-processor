@@ -1,7 +1,8 @@
 interface IConfiguration {
+    readonly azureContainerName: string;
+    readonly azureOutputContainerName: string;
     readonly azureStorageAccountName: string;
     readonly azureStorageKey: string;
-    readonly azureContainerName: string;
 }
 
 export class Configuration {
@@ -10,6 +11,7 @@ export class Configuration {
     public static set = (isTest: boolean) => {
         Configuration.keys = {
             azureContainerName: Configuration.getEnvironmentVariable('Azure.ContainerName', isTest),
+            azureOutputContainerName: Configuration.getEnvironmentVariable('Azure.OutputContainerName', isTest),
             azureStorageAccountName: Configuration.getEnvironmentVariable('Azure.StorageAccountName', isTest),
             azureStorageKey: Configuration.getEnvironmentVariable('Azure.StorageKey', isTest),
         };
