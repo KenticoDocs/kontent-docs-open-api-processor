@@ -11,7 +11,7 @@ import {
 } from 'cloud-docs-shared-code';
 import { getBooleanProperty } from '../utils/getProperties';
 import { getItemData } from '../utils/helpers';
-import { processRichTextWithComponents } from '../utils/richTextProcessing';
+import { processRichTextWithChildren } from '../utils/richTextProcessing';
 import {
     getParameterReference,
     resolveRequestBodyObject,
@@ -77,7 +77,7 @@ const resolvePathOperation = (
     }
 
     pathsObject[path][pathOperation] = {
-        description: processRichTextWithComponents(pathOperationData.description, items),
+        description: processRichTextWithChildren(pathOperationData.description, items),
         operationId: pathOperationData.url,
         parameters: resolveParameterObjects(pathOperationData.parameters, items),
         summary: pathOperationData.name,

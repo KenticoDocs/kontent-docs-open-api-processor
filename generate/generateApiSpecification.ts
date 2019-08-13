@@ -42,8 +42,8 @@ import {
     isNonEmptyString,
 } from '../utils/helpers';
 import {
-    processRichTextWithCallouts,
-    processRichTextWithComponents,
+    processRichTextWithChildren,
+    processRichTextWithOnlyCallouts,
 } from '../utils/richTextProcessing';
 import { resolvePathsObject } from './getPathsObject';
 import {
@@ -76,7 +76,7 @@ export const generateApiSpecification = (data: IPreprocessedData): OpenApiSpec =
 
 const resolveInfoObject = (apiSpecification: IZapiSpecification, items: unknown): InfoObject => {
     const infoObject: InfoObject = {
-        description: processRichTextWithComponents(apiSpecification.description, items),
+        description: processRichTextWithChildren(apiSpecification.description, items),
         title: apiSpecification.title,
         version: apiSpecification.version,
         ...getNonEmptyStringProperty(apiSpecification.termsOfService, 'termsOfService'),
@@ -125,7 +125,7 @@ const resolveTagObjects = (categoriesCodenames: string[], items: unknown): TagOb
         const categoryData = getItemData<ICategory>(codename, items);
 
         return {
-            description: processRichTextWithComponents(categoryData.description, items),
+            description: processRichTextWithChildren(categoryData.description, items),
             name: categoryData.name,
         };
     });
@@ -137,7 +137,7 @@ export const getParameterReference = (codename, items: unknown): ReferenceObject
 
     if (!parametersComponents.hasOwnProperty(name)) {
         const parameterObject: BaseParameterObject = {
-            description: processRichTextWithCallouts(parameterData.description, items),
+            description: processRichTextWithOnlyCallouts(parameterData.description, items),
             in: parameterData.location[0] as ParameterLocation,
             name,
             ...getBooleanProperty(parameterData.deprecated, 'deprecated'),
@@ -223,7 +223,7 @@ export const resolveResponseObjects = (richTextField: string, items: unknown): R
         const headers = resolveHeadersObjects(responseData.headers, items);
 
         const responseObject: ResponseObject = {
-            description: processRichTextWithCallouts(responseData.description, items),
+            description: processRichTextWithOnlyCallouts(responseData.description, items),
             ...getHeadersProperty(headers, 'headers'),
         };
 
@@ -283,7 +283,7 @@ const resolveSecuritySchemeObject = (apiSpecification: IZapiSpecification, items
         const securitySchemeData = getItemData<ISecurityScheme>(apiSpecification.security[0], items);
 
         return {
-            description: processRichTextWithCallouts(securitySchemeData.description, items),
+            description: processRichTextWithOnlyCallouts(securitySchemeData.description, items),
             type: securitySchemeData.type[0] as SecuritySchemeType,
             ...getMultipleChoiceProperty(securitySchemeData.apiKeyLocation, 'apiKeyLocation'),
             ...getNonEmptyStringProperty(securitySchemeData.scheme, 'scheme'),

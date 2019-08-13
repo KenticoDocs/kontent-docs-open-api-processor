@@ -5,7 +5,7 @@ import {
 } from '@loopback/openapi-v3-types';
 import { resolveDiscriminatorObject } from '../generate/getSchemaObjects';
 import { isNonEmptyString } from './helpers';
-import { processRichTextWithCallouts } from './richTextProcessing';
+import { processRichTextWithOnlyCallouts } from './richTextProcessing';
 
 type ConditionFunction<ElementType> = (element: ElementType) => boolean;
 type InsertionFunction<ElementType, ToInsert> = (element: ElementType) => ToInsert;
@@ -37,7 +37,7 @@ export const getDescriptionProperty = (
 ): IObjectWithProperty | {} =>
     getGenericProperty<string, string>(
         isNonEmptyString,
-        (x) => processRichTextWithCallouts(x, items))
+        (x) => processRichTextWithOnlyCallouts(x, items))
     (element, propertyName);
 
 export const getMultipleChoiceProperty = (element: string[], propertyName: string): IObjectWithProperty | {} =>
@@ -80,7 +80,7 @@ export const getDiscriminatorProperty = (
         (x) => resolveDiscriminatorObject(x, items))
     (field, propertyName);
 
-export const getSchemaProperty = (element: SchemaObject, propertyName: string): any => {
+export const getSchemaProperty = (element: SchemaObject, propertyName: string): object => {
     switch (Object.keys(element).length) {
         case 0: {
             return {};
@@ -89,12 +89,6 @@ export const getSchemaProperty = (element: SchemaObject, propertyName: string): 
             return { [propertyName]: element[Object.keys(element)[0]] };
         }
         default: {
-            // const keys = element.map((schema, index) => {
-            //     return schema[index].keys() ? schema[index].keys()[0] : undefined;
-            // });
-            // const schemaObject = {};
-            // keys.forEach((key, index) => schemaObject[key] = element[index][key]);
-
             return { [propertyName]: element };
         }
     }

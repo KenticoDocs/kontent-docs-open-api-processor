@@ -5,7 +5,7 @@ const striptags = require('striptags');
 const parser = require('node-html-parser');
 
 export const isNonEmptyString = (text: string): boolean => {
-    const textWithoutTags = striptags(text);
+    const textWithoutTags = striptags(text).trim();
 
     return textWithoutTags && textWithoutTags.length > 0;
 };

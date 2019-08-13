@@ -4,128 +4,105 @@ import {
     ICodeSamples,
 } from 'cloud-docs-shared-code/reference/preprocessedModels';
 import {
-    getLabelledCallout,
-    getLabelledCodeSample,
-    getLabelledCodeSamples,
+    labelAllChildItems,
+    labelChildCallouts,
+    labelChildren,
 } from './descriptionLabels';
-import { getItemData } from './helpers';
+import {
+    getItemData,
+    isNonEmptyString,
+} from './helpers';
 
 const html2commonmark = require('html2commonmark');
-const parser = require('node-html-parser');
 
-export const processRichTextWithComponents = (richTextField: string, items: unknown) => {
+export const processRichTextWithChildren = (richTextField: string, items: unknown) => {
     const richTextWithLabelledChildren = labelChildren<ICallout | ICodeSamples | ICodeSample>(
-        labelAnyChildItems)(richTextField, items);
-    const sanitizedRichText = sanitizeRichText(richTextWithLabelledChildren);
+        labelAllChildItems)(richTextField, items);
+    const commonMarkText = convertToCommonMark(richTextWithLabelledChildren);
 
-    // return convertToCommonMark(sanitizedRichText);
-    return sanitizedRichText;
+    return resolveChildrenAndCodeBlocks(commonMarkText, items);
 };
 
-export const processRichTextWithCallouts = (richTextField: string, items: unknown) => {
+export const processRichTextWithOnlyCallouts = (richTextField: string, items: unknown) => {
     const richTextWithLabelledChildren = labelChildren<ICallout>(
         labelChildCallouts)(richTextField, items);
-    const sanitizedRichText = sanitizeRichText(richTextWithLabelledChildren);
+    const commonMarkText = convertToCommonMark(richTextWithLabelledChildren);
 
-    // return convertToCommonMark(sanitizedRichText);
-    return sanitizedRichText;
+    return resolveChildrenAndCodeBlocks(commonMarkText, items);
 };
 
-// TODO Nekonvertuj code samply na common mark
 const convertToCommonMark = (html: string): string => {
     const converter = new html2commonmark.JSDomConverter();
     const renderer = new html2commonmark.Renderer();
-
     const abstractSyntaxTree = converter.convert(html);
 
     return renderer.render(abstractSyntaxTree);
 };
 
-interface IChildElementData {
-    readonly codename: string;
-    readonly element: string;
-}
+export const resolveChildrenAndCodeBlocks = (content: string, items: unknown): string => {
+    const contentWithChildrenContent = insertChildrenIntoCommonMark(content, items);
 
-type ILabelFunction<AllowedChildren> = (
-    item: AllowedChildren,
-    content: string,
-    childElementData: IChildElementData,
-    items: unknown,
-) => string;
+    return contentWithChildrenContent
+        .replace(/({~)/g, '`')
+        .replace(/(~})/g, '`');
+};
 
-const labelChildren = <AllowedChildren>(labelFunction: ILabelFunction<AllowedChildren>) =>
-    (content: string, items: unknown): string => {
-        const root = parser.parse(content);
-        const objectElements = root.querySelectorAll('p');
+const insertChildrenIntoCommonMark = (content: string, items: unknown): string => {
+    const codenamesExtractor = new RegExp('(<!--codename=([a-z0-9_]*)-->)', 'g');
+    let match = codenamesExtractor.exec(content);
 
-        const childElementsData = objectElements
-            .filter((objectElement) =>
-                objectElement.rawAttributes.type === 'application/kenticocloud' &&
-                objectElement.rawAttributes['data-type'] === 'item' &&
-                (objectElement.rawAttributes['data-rel'] === 'component' ||
-                    objectElement.rawAttributes['data-rel'] === 'link'))
-            .map((element) => ({
-                codename: element.rawAttributes['data-codename'],
-                element: element.toString(),
-            }));
+    let resolvedContent = content;
+    while (match && match[2]) {
+        const codename = match[2];
+        const childMarkToReplace = `<!--codename=${codename}-->`;
 
-        let modifiedContent = content;
-
-        childElementsData.forEach((childElementData) => {
-            const item = getItemData<AllowedChildren>(childElementData.codename, items);
-
-            if (item) {
-                modifiedContent = labelFunction(item, modifiedContent, childElementData, items);
+        const childData = getItemData<ICodeSample | ICallout>(codename, items);
+        switch (childData.contentType) {
+            case 'callout': {
+                resolvedContent = resolvedContent.replace(childMarkToReplace, (childData as ICallout).content);
+                break;
             }
-        });
-
-        return modifiedContent;
-    };
-
-const labelAnyChildItems = (
-    item: ICallout | ICodeSamples | ICodeSample,
-    content: string,
-    childElementData: IChildElementData,
-    items: unknown,
-): string => {
-    switch (item.contentType) {
-        case 'callout': {
-            return labelChildCallouts(item as ICallout, content, childElementData);
+            case 'code_sample': {
+                const codeBlock = getCodeBlock(childData as ICodeSample);
+                resolvedContent = resolvedContent.replace(childMarkToReplace, codeBlock);
+                break;
+            }
+            default: {
+                throw Error(`Invalid child of type ${childData.contentType} inside description element.`);
+            }
         }
-        case 'code_samples': {
-            const codeSamplesItem = item as ICodeSamples;
-            const labelledContent = getLabelledCodeSamples(codeSamplesItem.codeSamples, items);
 
-            return content.replace(childElementData.element, labelledContent);
+        match = codenamesExtractor.exec(content);
+    }
+
+    return resolvedContent;
+};
+
+const getCodeBlock = (codeSampleData: ICodeSample): string => {
+    const code = codeSampleData.code;
+    const syntaxHighlighter = getSyntaxHighlighter(codeSampleData.programmingLanguage);
+
+    return `\n\`\`\`${syntaxHighlighter}\n${code}\n\`\`\``;
+};
+
+const getSyntaxHighlighter = (programmingLanguages: string[]): string => {
+    const language = programmingLanguages.length > 0
+        ? programmingLanguages[0]
+        : '';
+
+    switch (language) {
+        case 'C#': {
+            return 'csharp';
         }
-        case 'code_sample': {
-            const { code, programmingLanguage, platform } = item as ICodeSample;
-            const labelledContent = getLabelledCodeSample(code, programmingLanguage, platform);
-
-            return content.replace(childElementData.element, labelledContent);
+        case 'CSS':
+        case 'cURL':
+        case 'shell': {
+            return '';
         }
         default: {
-            return;
+            return isNonEmptyString(language)
+                ? language.toLowerCase()
+                : '';
         }
     }
 };
-
-const labelChildCallouts = (
-    item: ICallout,
-    content: string,
-    childElementData: IChildElementData,
-): string => {
-    if (item && item.contentType === 'callout') {
-        const callout = item as ICallout;
-        const calloutType = callout.type.length === 1 ? callout.type[0] : 'not_specified';
-        const labelledContent = getLabelledCallout(callout.content, calloutType);
-
-        return content.replace(childElementData.element, labelledContent);
-    }
-
-    return content;
-};
-
-export const sanitizeRichText = (content: string): string =>
-    content.replace(/({~)/g, '<code>')
-        .replace(/(~})/g, '</code>');
