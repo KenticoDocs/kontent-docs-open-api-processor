@@ -2,6 +2,7 @@ import {
     ICallout,
     ICodeSample,
     ICodeSamples,
+    IPreprocessedItems,
 } from 'cloud-docs-shared-code/reference/preprocessedModels';
 import { getItemData } from './helpers';
 
@@ -16,11 +17,11 @@ type ILabelFunction<AllowedChildren> = (
     item: AllowedChildren,
     content: string,
     childElementData: IChildElementData,
-    items: unknown,
+    items: IPreprocessedItems,
 ) => string;
 
 export const labelChildren = <AllowedChildren>(labelFunction: ILabelFunction<AllowedChildren>) =>
-    (content: string, items: unknown): string => {
+    (content: string, items: IPreprocessedItems): string => {
         const root = parser.parse(content);
         const objectElements = root.querySelectorAll('p');
 
@@ -52,7 +53,7 @@ export const labelAllChildItems = (
     item: ICallout | ICodeSamples | ICodeSample,
     content: string,
     childElementData: IChildElementData,
-    items: unknown,
+    items: IPreprocessedItems,
 ): string => {
     switch (item.contentType) {
         case 'callout': {
@@ -95,13 +96,13 @@ export const labelChildCallouts = (
 export const getLabelledCallout = (codename: string, type: string): string =>
     getCalloutMarkStart(type) + getCodenameMark(codename) + CalloutMarkEnd;
 
-export const getLabelledCodeSamples = (codeSampleCodenames: string[], items: unknown): string => {
+export const getLabelledCodeSamples = (codeSampleCodenames: string[], items: IPreprocessedItems): string => {
     const content = getLabelledCodeSampleItems(codeSampleCodenames, items);
 
     return CodeSamplesMarkStart + content + CodeSamplesMarkEnd;
 };
 
-const getLabelledCodeSampleItems = (codenames: string[], items: unknown): string => {
+const getLabelledCodeSampleItems = (codenames: string[], items: IPreprocessedItems): string => {
     const codeSampleItems = codenames.map((codename) => {
         const { programmingLanguage, platform } = getItemData<ICodeSample>(codename, items);
 

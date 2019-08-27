@@ -3,6 +3,7 @@ import {
     Context,
 } from '@azure/functions';
 import {
+    Configuration,
     getBlobContainerName,
     getBlobFromStorage,
     IBlobEventGridEvent,
@@ -10,10 +11,10 @@ import {
 import { IPreprocessedData } from 'cloud-docs-shared-code/reference/preprocessedModels';
 import OpenAPISchemaValidator from 'openapi-schema-validator';
 import { OpenAPIV3 } from 'openapi-types';
-import * as YAML from 'yamljs';
-import { storeReferenceDataToBlobStorage } from '../external/blobManager';
-import { Configuration } from '../external/configuration';
 import { generateApiSpecification } from '../generate/generateApiSpecification';
+import { writeIntoFile } from '../redoc/fileHelpers';
+import { renderReference } from '../redoc/renderReference';
+import { jsonFilePath } from './filePaths';
 
 const eventGridEvent: AzureFunction = async (
     context: Context,
@@ -27,7 +28,7 @@ const eventGridEvent: AzureFunction = async (
 
         const blob = await getBlobFromStorage<IPreprocessedData>(
             event.data.url,
-            Configuration.keys.azureStorageAccountName,
+            Configuration.keys.azureAccountName,
             Configuration.keys.azureStorageKey,
         );
         const specification = generateApiSpecification(blob);
@@ -48,15 +49,18 @@ const eventGridEvent: AzureFunction = async (
         //     return;
         // }
 
-        const yaml = YAML
-            .stringify(specification, 12, 2)
-            // Formats array of objects nicely, see https://github.com/jeremyfa/yaml.js/issues/117
-            .replace(/(\s+\-)\s*\n\s+/g, '$1 ');
+        // const yaml = YAML
+        //     .stringify(specification, 12, 2)
+        //     // Formats array of objects nicely, see https://github.com/jeremyfa/yaml.js/issues/117
+        //     .replace(/(\s+\-)\s*\n\s+/g, '$1 ');
 
-        await storeReferenceDataToBlobStorage(yaml, blob.zapiSpecificationCodename, blob.operation);
+        const stringSpec = JSON.stringify(specification);
+
+        writeIntoFile(jsonFilePath, stringSpec);
+        renderReference(stringSpec, blob);
 
         context.res = {
-            body: yaml,
+            body: stringSpec,
         };
     } catch (error) {
         /** This try-catch is required for correct logging of exceptions in Azure */

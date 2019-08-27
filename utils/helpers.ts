@@ -1,7 +1,7 @@
 import { ReferenceObject } from '@loopback/openapi-v3-types';
+import { IPreprocessedItems } from 'cloud-docs-shared-code';
 
 const striptags = require('striptags');
-
 const parser = require('node-html-parser');
 
 export const isNonEmptyString = (text: string): boolean => {
@@ -10,8 +10,8 @@ export const isNonEmptyString = (text: string): boolean => {
     return textWithoutTags && textWithoutTags.length > 0;
 };
 
-export const getItemData = <DataObject>(codename: string, items: unknown): DataObject =>
-    items[codename];
+export const getItemData = <DataObject>(codename: string, items: IPreprocessedItems): DataObject =>
+    items[codename] as any as DataObject;
 
 export const getChildCodenamesFromRichText = (content: string): string[] => {
     const root = parser.parse(content);

@@ -2,6 +2,7 @@ import {
     ICallout,
     ICodeSample,
     ICodeSamples,
+    IPreprocessedItems,
 } from 'cloud-docs-shared-code/reference/preprocessedModels';
 import {
     labelAllChildItems,
@@ -15,7 +16,7 @@ import {
 
 const html2commonmark = require('html2commonmark');
 
-export const processRichTextWithChildren = (richTextField: string, items: unknown) => {
+export const processRichTextWithChildren = (richTextField: string, items: IPreprocessedItems) => {
     const richTextWithLabelledChildren = labelChildren<ICallout | ICodeSamples | ICodeSample>(
         labelAllChildItems)(richTextField, items);
     const commonMarkText = convertToCommonMark(richTextWithLabelledChildren);
@@ -23,7 +24,7 @@ export const processRichTextWithChildren = (richTextField: string, items: unknow
     return resolveChildrenAndCodeBlocks(commonMarkText, items);
 };
 
-export const processRichTextWithOnlyCallouts = (richTextField: string, items: unknown) => {
+export const processRichTextWithOnlyCallouts = (richTextField: string, items: IPreprocessedItems) => {
     const richTextWithLabelledChildren = labelChildren<ICallout>(
         labelChildCallouts)(richTextField, items);
     const commonMarkText = convertToCommonMark(richTextWithLabelledChildren);
@@ -39,7 +40,7 @@ const convertToCommonMark = (html: string): string => {
     return renderer.render(abstractSyntaxTree);
 };
 
-export const resolveChildrenAndCodeBlocks = (content: string, items: unknown): string => {
+export const resolveChildrenAndCodeBlocks = (content: string, items: IPreprocessedItems): string => {
     const contentWithChildrenContent = insertChildrenIntoCommonMark(content, items);
 
     return contentWithChildrenContent
@@ -47,7 +48,7 @@ export const resolveChildrenAndCodeBlocks = (content: string, items: unknown): s
         .replace(/(~})/g, '`');
 };
 
-const insertChildrenIntoCommonMark = (content: string, items: unknown): string => {
+const insertChildrenIntoCommonMark = (content: string, items: IPreprocessedItems): string => {
     const codenamesExtractor = new RegExp('(<!--codename=([a-z0-9_]*)-->)', 'g');
     let match = codenamesExtractor.exec(content);
 

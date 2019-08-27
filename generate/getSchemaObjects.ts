@@ -5,6 +5,7 @@ import {
 import {
     IDiscriminator,
     IDiscriminatorMapItem,
+    IPreprocessedItems,
     IPropertyReferencingASchema,
     ISchemaAllOf,
     ISchemaAnyOf,
@@ -49,7 +50,7 @@ export type ISchemas =
     | ISchemaString
     | IPropertyReferencingASchema;
 
-export const getSchemaObject = (schemaData: ISchemas, items: unknown): SchemaObject => {
+export const getSchemaObject = (schemaData: ISchemas, items: IPreprocessedItems): SchemaObject => {
     switch (schemaData.contentType) {
         case 'zapi_schema__allof': {
             return getSchemaAllOfObject(schemaData as ISchemaAllOf, items);
@@ -87,31 +88,32 @@ export const getSchemaObject = (schemaData: ISchemas, items: unknown): SchemaObj
     }
 };
 
-const getSchemaAllOfObject = (schemaData: ISchemaAllOf, items: unknown): SchemaObject => ({
+// TODO ma v sebe vzdy pole aj ked ide len o 1 schemu
+const getSchemaAllOfObject = (schemaData: ISchemaAllOf, items: IPreprocessedItems): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getSchemaProperty(resolveSchemaObjectsInRichTextElement(schemaData.schemas, items), 'allOf'),
 });
 
-const getSchemaAnyOfObject = (schemaData: ISchemaAnyOf, items: unknown): SchemaObject => ({
+const getSchemaAnyOfObject = (schemaData: ISchemaAnyOf, items: IPreprocessedItems): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getSchemaObjectPropertyElements(schemaData),
     ...getSchemaProperty(resolveSchemaObjectsInLinkedItems(schemaData.schemas, items), 'anyOf'),
 });
 
-const getSchemaArrayObject = (schemaData: ISchemaArray, items: unknown): SchemaObject => ({
+const getSchemaArrayObject = (schemaData: ISchemaArray, items: IPreprocessedItems): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getSchemaProperty(resolveSchemaObjectsInRichTextElement(schemaData.items, items), 'items'),
     ...getBooleanProperty(schemaData.uniqueItems, 'uniqueItems'),
     type: 'array',
 });
 
-const getSchemaBooleanObject = (schemaData: ISchemaBoolean, items: unknown): SchemaObject => ({
+const getSchemaBooleanObject = (schemaData: ISchemaBoolean, items: IPreprocessedItems): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getSchemaObjectPropertyElements(schemaData),
     type: 'boolean',
 });
 
-const getSchemaIntegerObject = (schemaData: ISchemaInteger, items: unknown): SchemaObject => ({
+const getSchemaIntegerObject = (schemaData: ISchemaInteger, items: IPreprocessedItems): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getSchemaObjectPropertyElements(schemaData),
     ...getArrayPropertyFromString(schemaData.acceptedValues, 'enum'),
@@ -122,7 +124,7 @@ const getSchemaIntegerObject = (schemaData: ISchemaInteger, items: unknown): Sch
     type: 'integer',
 });
 
-const getSchemaNumberObject = (schemaData: ISchemaNumber, items: unknown): SchemaObject => ({
+const getSchemaNumberObject = (schemaData: ISchemaNumber, items: IPreprocessedItems): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getSchemaObjectPropertyElements(schemaData),
     ...getArrayPropertyFromString(schemaData.acceptedValues, 'enum'),
@@ -132,7 +134,7 @@ const getSchemaNumberObject = (schemaData: ISchemaNumber, items: unknown): Schem
     type: 'number',
 });
 
-const getSchemaObjectObject = (schemaData: ISchemaObject, items: unknown): SchemaObject => {
+const getSchemaObjectObject = (schemaData: ISchemaObject, items: IPreprocessedItems): SchemaObject => {
     const properties = resolveSchemaObjectsInRichTextElement(schemaData.properties, items);
     const additionalProperties = resolveSchemaObjectsInRichTextElement(schemaData.additionalProperties, items);
 
@@ -145,13 +147,13 @@ const getSchemaObjectObject = (schemaData: ISchemaObject, items: unknown): Schem
     };
 };
 
-const getSchemaOneOfObject = (schemaData: ISchemaOneOf, items: unknown): SchemaObject => ({
+const getSchemaOneOfObject = (schemaData: ISchemaOneOf, items: IPreprocessedItems): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getDiscriminatorProperty(schemaData.discriminator, 'discriminator', items),
     ...getSchemaProperty(resolveSchemaObjectsInLinkedItems(schemaData.schemas, items), 'oneOf'),
 });
 
-const getSchemaStringObject = (schemaData: ISchemaString, items: unknown): SchemaObject => ({
+const getSchemaStringObject = (schemaData: ISchemaString, items: IPreprocessedItems): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getSchemaObjectPropertyElements(schemaData),
     ...getArrayPropertyFromString(schemaData.acceptedValues, 'enum'),
@@ -162,7 +164,7 @@ const getSchemaStringObject = (schemaData: ISchemaString, items: unknown): Schem
     type: 'string',
 });
 
-const getPropertyReferencingObject = (data: IPropertyReferencingASchema, items: unknown): SchemaObject =>
+const getPropertyReferencingObject = (data: IPropertyReferencingASchema, items: IPreprocessedItems): SchemaObject =>
     // Element is required to have exactly 1 schema item inserted
     resolveSchemaObjectsInLinkedItems(data.schema, items)[0];
 
@@ -171,7 +173,10 @@ interface ISchemaObjectCommonElements {
     readonly example?: string,
 }
 
-const getSchemaCommonElements = (schemaData: ISchemaElements, items: unknown): ISchemaObjectCommonElements => ({
+const getSchemaCommonElements = (
+    schemaData: ISchemaElements,
+    items: IPreprocessedItems,
+): ISchemaObjectCommonElements => ({
     ...getDescriptionProperty(schemaData.description, 'description', items),
     ...getNonEmptyStringProperty(schemaData.example, 'example'),
 });
@@ -184,11 +189,11 @@ interface ISchemaObjectBooleanElements {
 
 const getSchemaObjectPropertyElements = (schemaData: ISchemaObjectPropertyElements): ISchemaObjectBooleanElements => ({
     ...getBooleanProperty(schemaData.nullable, 'nullable'),
-    ...getBooleanProperty(schemaData.readonly, 'readonly'),
-    ...getBooleanProperty(schemaData.writeonly, 'writeonly'),
+    ...getBooleanProperty(schemaData.readonly, 'readOnly'),
+    ...getBooleanProperty(schemaData.writeonly, 'writeOnly'),
 });
 
-export const resolveDiscriminatorObject = (field: string, items: unknown): DiscriminatorObject => {
+export const resolveDiscriminatorObject = (field: string, items: IPreprocessedItems): DiscriminatorObject => {
     const discriminatorInfo = getChildInfosFromRichText(field);
 
     if (discriminatorInfo.length === 1) {
@@ -206,7 +211,7 @@ interface IMapItemObjects {
     [key: string]: string
 }
 
-const resolveDiscriminatorMapItemObject = (field: string, items: unknown): IMapItemObjects => {
+const resolveDiscriminatorMapItemObject = (field: string, items: IPreprocessedItems): IMapItemObjects => {
     const discriminatorMapInfos = getChildInfosFromRichText(field);
     const mapItemObjects = {};
 

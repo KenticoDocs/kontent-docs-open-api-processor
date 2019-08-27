@@ -21,6 +21,7 @@ import {
     ILicense,
     IParameter,
     IPreprocessedData,
+    IPreprocessedItems,
     IRequestBody,
     IResponse,
     ISecurityScheme,
@@ -58,7 +59,7 @@ const schemasComponents = {};
 
 export const generateApiSpecification = (data: IPreprocessedData): OpenApiSpec => {
     const items = data.items;
-    const apiSpecification: IZapiSpecification = items[data.zapiSpecificationCodename];
+    const apiSpecification = items[data.zapiSpecificationCodename] as IZapiSpecification;
 
     const openApiSpecification: OpenApiSpec = {
         info: resolveInfoObject(apiSpecification, items),
@@ -74,7 +75,7 @@ export const generateApiSpecification = (data: IPreprocessedData): OpenApiSpec =
     return openApiSpecification;
 };
 
-const resolveInfoObject = (apiSpecification: IZapiSpecification, items: unknown): InfoObject => {
+const resolveInfoObject = (apiSpecification: IZapiSpecification, items: IPreprocessedItems): InfoObject => {
     const infoObject: InfoObject = {
         description: processRichTextWithChildren(apiSpecification.description, items),
         title: apiSpecification.title,
@@ -87,7 +88,11 @@ const resolveInfoObject = (apiSpecification: IZapiSpecification, items: unknown)
     return infoObject;
 };
 
-const resolveContactObject = (apiSpecification: IZapiSpecification, items: unknown, infoObject: InfoObject): void => {
+const resolveContactObject = (
+    apiSpecification: IZapiSpecification,
+    items: IPreprocessedItems,
+    infoObject: InfoObject,
+): void => {
     if (apiSpecification.contact.length === 1) {
         const contactCodename = apiSpecification.contact[0];
         const contactData = getItemData<IContact>(contactCodename, items);
@@ -97,7 +102,11 @@ const resolveContactObject = (apiSpecification: IZapiSpecification, items: unkno
     }
 };
 
-const resolveLicenseObject = (apiSpecification: IZapiSpecification, items: unknown, infoObject: InfoObject): void => {
+const resolveLicenseObject = (
+    apiSpecification: IZapiSpecification,
+    items: IPreprocessedItems,
+    infoObject: InfoObject,
+): void => {
     if (apiSpecification.license.length === 1) {
         const licenseCodename = apiSpecification.license[0];
         const licenseData: ILicense = getItemData<ILicense>(licenseCodename, items);
@@ -107,7 +116,7 @@ const resolveLicenseObject = (apiSpecification: IZapiSpecification, items: unkno
     }
 };
 
-const resolveServerObjects = (serversElement: string, items: unknown): ServerObject[] => {
+const resolveServerObjects = (serversElement: string, items: IPreprocessedItems): ServerObject[] => {
     const serverCodenames = getChildCodenamesFromRichText(serversElement);
 
     return serverCodenames.map((codename) => {
@@ -120,7 +129,7 @@ const resolveServerObjects = (serversElement: string, items: unknown): ServerObj
     });
 };
 
-const resolveTagObjects = (categoriesCodenames: string[], items: unknown): TagObject[] =>
+const resolveTagObjects = (categoriesCodenames: string[], items: IPreprocessedItems): TagObject[] =>
     categoriesCodenames.map((codename) => {
         const categoryData = getItemData<ICategory>(codename, items);
 
@@ -130,7 +139,7 @@ const resolveTagObjects = (categoriesCodenames: string[], items: unknown): TagOb
         };
     });
 
-export const getParameterReference = (codename, items: unknown): ReferenceObject => {
+export const getParameterReference = (codename, items: IPreprocessedItems): ReferenceObject => {
     const parameterData = getItemData<IParameter>(codename, items);
     const name = parameterData.name;
     const schema = resolveSchemaObjectsInLinkedItems(parameterData.schema, items);
@@ -157,7 +166,7 @@ export const getParameterReference = (codename, items: unknown): ReferenceObject
 const resolveParameterExample = (
     parameterData: IParameter,
     parameterObject: BaseParameterObject,
-    items: unknown,
+    items: IPreprocessedItems,
 ): void => {
     const schemaData = getItemData<ISchemas>(parameterData.schema[0], items);
     const schemaType = schemaData.contentType;
@@ -183,7 +192,7 @@ const resolveParameterExample = (
 
 export const resolveRequestBodyObject = (
     richTextField: string,
-    items: unknown,
+    items: IPreprocessedItems,
 ): RequestBodyObject | ReferenceObject => {
     const requestBodyInfo = getChildInfosFromRichText(richTextField);
     if (requestBodyInfo.length === 1) {
@@ -213,7 +222,7 @@ export const resolveRequestBodyObject = (
     }
 };
 
-export const resolveResponseObjects = (richTextField: string, items: unknown): ResponsesObject => {
+export const resolveResponseObjects = (richTextField: string, items: IPreprocessedItems): ResponsesObject => {
     const responsesObject: ResponsesObject = {};
 
     const responsesInfo = getChildInfosFromRichText(richTextField);
@@ -251,7 +260,7 @@ export const resolveResponseObjects = (richTextField: string, items: unknown): R
     return responsesObject;
 };
 
-const resolveHeadersObjects = (codenames: string[], items: unknown): HeadersObject =>
+const resolveHeadersObjects = (codenames: string[], items: IPreprocessedItems): HeadersObject =>
     codenames
         .map((codename) => {
             const parameterData = getItemData<IParameter>(codename, items);
@@ -263,7 +272,7 @@ const resolveHeadersObjects = (codenames: string[], items: unknown): HeadersObje
         })
         .reduce((accumulated, current) => Object.assign(accumulated, current), {});
 
-const resolveComponentsObject = (apiSpecification: IZapiSpecification, items: unknown): ComponentsObject => {
+const resolveComponentsObject = (apiSpecification: IZapiSpecification, items: IPreprocessedItems): ComponentsObject => {
     const securitySchemes = resolveSecuritySchemeObject(apiSpecification, items);
     const securityComponents = securitySchemes
         ? { [securitySchemes.name]: securitySchemes }
@@ -278,7 +287,10 @@ const resolveComponentsObject = (apiSpecification: IZapiSpecification, items: un
     };
 };
 
-const resolveSecuritySchemeObject = (apiSpecification: IZapiSpecification, items: unknown): SecuritySchemeObject => {
+const resolveSecuritySchemeObject = (
+    apiSpecification: IZapiSpecification,
+    items: IPreprocessedItems,
+): SecuritySchemeObject => {
     if (apiSpecification.security.length === 1) {
         const securitySchemeData = getItemData<ISecurityScheme>(apiSpecification.security[0], items);
 
@@ -293,7 +305,7 @@ const resolveSecuritySchemeObject = (apiSpecification: IZapiSpecification, items
     }
 };
 
-export const resolveSchemaObjectsInLinkedItems = (element: string[], items: unknown): SchemaObject[] => {
+export const resolveSchemaObjectsInLinkedItems = (element: string[], items: IPreprocessedItems): SchemaObject[] => {
     const schemas = [];
     element.map((codename) => {
         const schemaData = getItemData<ISchemas>(codename, items);
@@ -306,7 +318,7 @@ export const resolveSchemaObjectsInLinkedItems = (element: string[], items: unkn
     return schemas;
 };
 
-export const resolveSchemaObjectsInRichTextElement = (element: string, items: unknown): SchemaObject => {
+export const resolveSchemaObjectsInRichTextElement = (element: string, items: IPreprocessedItems): SchemaObject => {
     const schemas = {};
     const schemasInfo = getChildInfosFromRichText(element);
 

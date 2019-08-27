@@ -8,6 +8,7 @@ import {
     ICodeSample,
     ICodeSamples,
     IPathOperation,
+    IPreprocessedItems,
 } from 'cloud-docs-shared-code';
 import { getBooleanProperty } from '../utils/getProperties';
 import { getItemData } from '../utils/helpers';
@@ -23,7 +24,7 @@ interface IPathOperationInfo {
     readonly codename: string;
 }
 
-export const resolvePathsObject = (categoriesCodenames: string[], items: unknown): PathsObject => {
+export const resolvePathsObject = (categoriesCodenames: string[], items: IPreprocessedItems): PathsObject => {
     const pathsObject = {};
     const pathOperationsData = getPathOperationsInfo(categoriesCodenames, items);
 
@@ -46,7 +47,7 @@ export const resolvePathsObject = (categoriesCodenames: string[], items: unknown
     return pathsObject;
 };
 
-const getPathOperationsInfo = (categoriesCodenames: string[], items: unknown): Set<IPathOperationInfo> => {
+const getPathOperationsInfo = (categoriesCodenames: string[], items: IPreprocessedItems): Set<IPathOperationInfo> => {
     const pathOperationsInfo = new Set<IPathOperationInfo>();
 
     categoriesCodenames.forEach((codename) => {
@@ -66,7 +67,7 @@ const getPathOperationsInfo = (categoriesCodenames: string[], items: unknown): S
 const resolvePathOperation = (
     pathOperationData: IPathOperation,
     pathsObject: PathsObject,
-    items: unknown,
+    items: IPreprocessedItems,
     pathOperationInfo: IPathOperationInfo,
 ): OperationObject => {
     const pathOperation = pathOperationData.pathOperation[0].toLowerCase();
@@ -88,10 +89,10 @@ const resolvePathOperation = (
     return pathsObject[path][pathOperation];
 };
 
-const resolveParameterObjects = (codenames: string[], items: unknown): ReferenceObject[] =>
+const resolveParameterObjects = (codenames: string[], items: IPreprocessedItems): ReferenceObject[] =>
     codenames.map((codename) => getParameterReference(codename, items));
 
-const resolvePathOperationCodeSamples = (pathOperationData, items: unknown, pathMethod): void => {
+const resolvePathOperationCodeSamples = (pathOperationData, items: IPreprocessedItems, pathMethod): void => {
     if (pathOperationData.codeSamples.length === 1) {
         const codeSamplesCodename = pathOperationData.codeSamples[0];
         const codeSamplesObject = getItemData<ICodeSamples>(codeSamplesCodename, items);
