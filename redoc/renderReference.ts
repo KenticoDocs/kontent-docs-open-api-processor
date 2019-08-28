@@ -28,7 +28,7 @@ const renderRedoc = (jsonPath: string, htmlPath: string, blob: IPreprocessedData
     const template = './redoc-cli/template2.hbs';
 
     cmd.get(
-        `node ./redoc-cli/index.js bundle ${jsonPath} -t ${template} ${options}`,
+        `node ./redoc-cli/index.js bundle './redoc-cli/openapi.json' -t ${template} ${options}`,
         async () => {
             const html = getReferenceHtml(htmlPath);
             await storeReferenceDataToBlobStorage(html, blob.zapiSpecificationCodename, blob.operation);
