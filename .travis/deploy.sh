@@ -11,6 +11,8 @@
     declare -r files=(
         kcd-open-api-processor
         dist
+        redoc
+        redoc-static.html
         extensions.csproj
         host.json
         package.json

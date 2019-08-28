@@ -25,10 +25,10 @@ export const renderReference = (json: string, blob: IPreprocessedData): void => 
 
 const renderRedoc = (jsonPath: string, htmlPath: string, blob: IPreprocessedData): void => {
     const options = prerenderOptions.join(' ');
-    const template = './redoc/redoc-cli/template2.hbs';
+    const template = './redoc-cli/template2.hbs';
 
     cmd.get(
-        `node ./redoc/redoc-cli/index.js bundle ${jsonPath} -t ${template} ${options}`,
+        `node ./redoc-cli/index.js bundle ${jsonPath} -t ${template} ${options}`,
         async () => {
             const html = getReferenceHtml(htmlPath);
             await storeReferenceDataToBlobStorage(html, blob.zapiSpecificationCodename, blob.operation);
