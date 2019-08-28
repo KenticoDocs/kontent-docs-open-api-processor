@@ -41,8 +41,11 @@ export const getBlobId = (codename: string, operation: ReferenceOperation): stri
         case ReferenceOperation.Initialize: {
             return `${codename}.html`;
         }
+        // TODO Remove before merge to master
         case ReferenceOperation.Preview: {
-            return `${codename}-preview.html`;
+            return codename.includes('TEMP')
+                ? `${codename}-preview.json`
+                : `${codename}-preview.html`;
         }
         default: {
             throw Error('Invalid operation');
