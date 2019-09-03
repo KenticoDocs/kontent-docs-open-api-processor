@@ -4,8 +4,14 @@ import {
     SchemaObject,
 } from '@loopback/openapi-v3-types';
 import { IPreprocessedItems } from 'cloud-docs-shared-code';
-import { resolveDiscriminatorObject } from '../generate/getSchemaObjects';
-import { isNonEmptyString } from './helpers';
+import {
+    ISchemasObject,
+    resolveDiscriminatorObject,
+} from '../generate/getSchemaObjects';
+import {
+    isNonEmptyDescription,
+    isNonEmptyTextOrRichTextLinks,
+} from './helpers';
 import { processRichTextWithOnlyCallouts } from './richTextProcessing';
 
 type ConditionFunction<ElementType> = (element: ElementType) => boolean;
@@ -27,7 +33,7 @@ interface IObjectWithProperty {
 
 export const getNonEmptyStringProperty = (element: string, propertyName: string): IObjectWithProperty | {} =>
     getGenericProperty<string, string>(
-        isNonEmptyString,
+        isNonEmptyTextOrRichTextLinks,
         (value) => value,
     )(element, propertyName);
 
@@ -37,7 +43,7 @@ export const getDescriptionProperty = (
     items: IPreprocessedItems,
 ): IObjectWithProperty | {} =>
     getGenericProperty<string, string>(
-        isNonEmptyString,
+        isNonEmptyDescription,
         (x) => processRichTextWithOnlyCallouts(x, items),
     )(element, propertyName);
 
@@ -55,7 +61,7 @@ export const getBooleanProperty = (element: string[], propertyName: string): IOb
 
 export const getArrayPropertyFromString = (element: string, propertyName: string): IObjectWithProperty | {} =>
     getGenericProperty<string, string[]>(
-        isNonEmptyString,
+        isNonEmptyTextOrRichTextLinks,
         (x) => x.split(','),
     )(element, propertyName);
 
@@ -77,20 +83,61 @@ export const getDiscriminatorProperty = (
     items: IPreprocessedItems,
 ): DiscriminatorObject | {} =>
     getGenericProperty<string, DiscriminatorObject>(
-        isNonEmptyString,
+        isNonEmptyTextOrRichTextLinks,
         (x) => resolveDiscriminatorObject(x, items),
     )(field, propertyName);
 
-export const getSchemaProperty = (element: SchemaObject, propertyName: string): object => {
+export const getSchemaProperty = (element: SchemaObject[], propertyName: string): ISchemasObject | SchemaObject[] => {
+    // AllOf and oneOf schemas will always contain an array of schemas without identifiers
+    if (propertyName === 'allOf' || propertyName === 'oneOf') {
+        const schemaObject = removeIdentifiersFromSchemasArray(element);
+
+        return { [propertyName]: schemaObject };
+    }
+
     switch (Object.keys(element).length) {
         case 0: {
             return {};
         }
         case 1: {
-            return { [propertyName]: element[Object.keys(element)[0]] };
+            // Schema object's properties attribute needs identifiers
+            if (propertyName === 'properties') {
+                return { [propertyName]: element[Object.keys(element)[0]] };
+            } else {
+                const schemaObject = removeIdentifiersFromSchemasArray(element);
+
+                return { [propertyName]: schemaObject[0] };
+            }
         }
         default: {
-            return { [propertyName]: element };
+            return { [propertyName]: getISchemasObject(element) };
         }
     }
+};
+
+const removeIdentifiersFromSchemasArray = (element: SchemaObject[]): SchemaObject[] => {
+    const schemas = [];
+    element.forEach((schemaObject) => {
+        const identifier = Object.keys(schemaObject)[0];
+
+        if (identifier === '$ref') {
+            schemas.push(schemaObject);
+        } else {
+            schemas.push(schemaObject[identifier]);
+        }
+    });
+
+    return schemas;
+};
+
+// Transforms an array of schemas into an object with properties
+const getISchemasObject = (element: SchemaObject[]): ISchemasObject => {
+    const schemas = {};
+
+    element.forEach((schemaObject) => {
+        const identifier = Object.keys(schemaObject)[0];
+        schemas[identifier] = schemaObject[identifier];
+    });
+
+    return schemas;
 };

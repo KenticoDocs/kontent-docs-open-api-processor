@@ -13,14 +13,14 @@ interface IChildElementData {
     readonly element: string;
 }
 
-type ILabelFunction<AllowedChildren> = (
+type LabelFunction<AllowedChildren> = (
     item: AllowedChildren,
     content: string,
     childElementData: IChildElementData,
     items: IPreprocessedItems,
 ) => string;
 
-export const labelChildren = <AllowedChildren>(labelFunction: ILabelFunction<AllowedChildren>) =>
+export const labelChildren = <AllowedChildren>(labelFunction: LabelFunction<AllowedChildren>) =>
     (content: string, items: IPreprocessedItems): string => {
         const root = parser.parse(content);
         const objectElements = root.querySelectorAll('p');
@@ -72,7 +72,8 @@ export const labelAllChildItems = (
             return content.replace(childElementData.element, labelledContent);
         }
         default: {
-            return;
+            // TODO Add resolving of Schemas into <SchemaDefinition> tags
+            return content;
         }
     }
 };

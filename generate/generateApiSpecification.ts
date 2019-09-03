@@ -30,6 +30,7 @@ import {
 } from 'cloud-docs-shared-code/reference/preprocessedModels';
 import {
     getBooleanProperty,
+    getDescriptionProperty,
     getHeadersProperty,
     getMultipleChoiceProperty,
     getNonEmptyStringProperty,
@@ -40,7 +41,7 @@ import {
     getChildInfosFromRichText,
     getItemData,
     getReferenceObject,
-    isNonEmptyString,
+    isNonEmptyTextOrRichTextLinks,
 } from '../utils/helpers';
 import {
     processRichTextWithChildren,
@@ -141,14 +142,13 @@ const resolveTagObjects = (categoriesCodenames: string[], items: IPreprocessedIt
 
 export const getParameterReference = (codename, items: IPreprocessedItems): ReferenceObject => {
     const parameterData = getItemData<IParameter>(codename, items);
-    const name = parameterData.name;
     const schema = resolveSchemaObjectsInLinkedItems(parameterData.schema, items);
 
-    if (!parametersComponents.hasOwnProperty(name)) {
+    if (!parametersComponents.hasOwnProperty(codename)) {
         const parameterObject: BaseParameterObject = {
             description: processRichTextWithOnlyCallouts(parameterData.description, items),
             in: parameterData.location[0] as ParameterLocation,
-            name,
+            name: parameterData.name,
             ...getBooleanProperty(parameterData.deprecated, 'deprecated'),
             ...getBooleanProperty(parameterData.required, 'required'),
             ...getBooleanProperty(parameterData.explode, 'explode'),
@@ -157,10 +157,10 @@ export const getParameterReference = (codename, items: IPreprocessedItems): Refe
         };
         resolveParameterExample(parameterData, parameterObject, items);
 
-        parametersComponents[name] = parameterObject;
+        parametersComponents[codename] = parameterObject;
     }
 
-    return getReferenceObject('parameters', name);
+    return getReferenceObject('parameters', codename);
 };
 
 const resolveParameterExample = (
@@ -202,7 +202,7 @@ export const resolveRequestBodyObject = (
 
         const requestBodyObject: RequestBodyObject = {
             content: {},
-            description: requestBodyData.description,
+            ...getDescriptionProperty(requestBodyData.description, 'description', items),
             ...getBooleanProperty(requestBodyData.required, 'required'),
 
         };
@@ -242,7 +242,7 @@ export const resolveResponseObjects = (richTextField: string, items: IPreprocess
             responseObject.content = {
                 [responseData.mediaType[0]]: {
                     ...getSchemaProperty(schema, 'schema'),
-                    example: responseData.example,
+                    ...getNonEmptyStringProperty(responseData.example, 'example'),
                 },
             };
         }
@@ -299,7 +299,6 @@ const resolveSecuritySchemeObject = (
             type: securitySchemeData.type[0] as SecuritySchemeType,
             ...getMultipleChoiceProperty(securitySchemeData.apiKeyLocation, 'apiKeyLocation'),
             ...getNonEmptyStringProperty(securitySchemeData.scheme, 'scheme'),
-            ...getNonEmptyStringProperty(securitySchemeData.name, 'name'),
             ...getNonEmptyStringProperty(securitySchemeData.bearerFormat, 'bearerFormat'),
         };
     }
@@ -309,7 +308,9 @@ export const resolveSchemaObjectsInLinkedItems = (element: string[], items: IPre
     const schemas = [];
     element.map((codename) => {
         const schemaData = getItemData<ISchemas>(codename, items);
-        const identifier = isNonEmptyString(schemaData.name) ? schemaData.name : codename;
+        const identifier = isNonEmptyTextOrRichTextLinks(schemaData.name)
+            ? schemaData.name
+            : codename;
 
         schemasComponents[identifier] = getSchemaObject(schemaData, items);
         schemas.push(getReferenceObject('schemas', identifier));
@@ -318,19 +319,23 @@ export const resolveSchemaObjectsInLinkedItems = (element: string[], items: IPre
     return schemas;
 };
 
-export const resolveSchemaObjectsInRichTextElement = (element: string, items: IPreprocessedItems): SchemaObject => {
-    const schemas = {};
+export const resolveSchemaObjectsInRichTextElement = (element: string, items: IPreprocessedItems): SchemaObject[] => {
+    const schemas = [];
     const schemasInfo = getChildInfosFromRichText(element);
 
     schemasInfo.forEach((schemaInfo) => {
         const schemaData = getItemData<ISchemas>(schemaInfo.codename, items);
-        const identifier = isNonEmptyString(schemaData.name) ? schemaData.name : schemaInfo.codename;
+        const identifier = isNonEmptyTextOrRichTextLinks(schemaData.name)
+            ? schemaData.name
+            : schemaInfo.codename;
 
         if (schemaInfo.isItem) {
             schemasComponents[identifier] = getSchemaObject(schemaData, items);
-            schemas[identifier] = (getReferenceObject('schemas', identifier));
+            schemas.push(getReferenceObject('schemas', identifier));
         } else {
-            schemas[identifier] = getSchemaObject(schemaData, items);
+            const schemaObject = {};
+            schemaObject[identifier] = getSchemaObject(schemaData, items);
+            schemas.push(schemaObject);
         }
     });
 

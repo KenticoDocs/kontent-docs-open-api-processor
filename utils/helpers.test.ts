@@ -3,7 +3,8 @@ import {
     getChildInfosFromRichText,
     getItemData,
     getReferenceObject,
-    isNonEmptyString,
+    isNonEmptyDescription,
+    isNonEmptyTextOrRichTextLinks,
 } from './helpers';
 
 interface ITestingCodeSamples {
@@ -33,7 +34,7 @@ const items = {
     },
 };
 
-const richTextContent = '<p ' +
+const richTextWithLinks = '<p ' +
     'type="application/kenticocloud" ' +
     'data-type="item" ' +
     'data-rel="link" ' +
@@ -55,33 +56,89 @@ const richTextContent = '<p ' +
 
 const childlessRichTextContent = '<p>Some text.</p>';
 
-describe('isNonEmptyString', () => {
+describe('isNonEmptyDescription', () => {
     it('returns false on null', () => {
-        const actualOutput = isNonEmptyString(null);
+        const actualOutput = isNonEmptyDescription(null);
 
         expect(actualOutput).toBeFalsy();
     });
 
     it('returns false on undefined', () => {
-        const actualOutput = isNonEmptyString(undefined);
+        const actualOutput = isNonEmptyDescription(undefined);
 
         expect(actualOutput).toBeFalsy();
     });
 
     it('returns false on whitespace', () => {
-        const actualOutput = isNonEmptyString(' ');
+        const actualOutput = isNonEmptyDescription(' ');
 
         expect(actualOutput).toBeFalsy();
     });
 
     it('returns false on an empty string', () => {
-        const actualOutput = isNonEmptyString('');
+        const actualOutput = isNonEmptyDescription('');
+
+        expect(actualOutput).toBeFalsy();
+    });
+
+    it('returns false on an empty rich text tag', () => {
+        const actualOutput = isNonEmptyDescription('<p><br></p>');
+
+        expect(actualOutput).toBeFalsy();
+    });
+
+    it('returns false on an rich text with only links', () => {
+        const actualOutput = isNonEmptyDescription(richTextWithLinks);
 
         expect(actualOutput).toBeFalsy();
     });
 
     it('returns true on a valid string', () => {
-        const actualOutput = isNonEmptyString('text');
+        const actualOutput = isNonEmptyDescription('text');
+
+        expect(actualOutput).toBeTruthy();
+    });
+});
+
+describe('isNonEmptyTextOrRichTextLinks', () => {
+    it('returns false on null', () => {
+        const actualOutput = isNonEmptyTextOrRichTextLinks(null);
+
+        expect(actualOutput).toBeFalsy();
+    });
+
+    it('returns false on undefined', () => {
+        const actualOutput = isNonEmptyTextOrRichTextLinks(undefined);
+
+        expect(actualOutput).toBeFalsy();
+    });
+
+    it('returns false on whitespace', () => {
+        const actualOutput = isNonEmptyTextOrRichTextLinks(' ');
+
+        expect(actualOutput).toBeFalsy();
+    });
+
+    it('returns false on an empty string', () => {
+        const actualOutput = isNonEmptyTextOrRichTextLinks('');
+
+        expect(actualOutput).toBeFalsy();
+    });
+
+    it('returns false on an empty rich text tag', () => {
+        const actualOutput = isNonEmptyTextOrRichTextLinks('<p><br></p>');
+
+        expect(actualOutput).toBeFalsy();
+    });
+
+    it('returns true on an rich text with only links', () => {
+        const actualOutput = isNonEmptyTextOrRichTextLinks(richTextWithLinks);
+
+        expect(actualOutput).toBeTruthy();
+    });
+
+    it('returns true on a valid string', () => {
+        const actualOutput = isNonEmptyTextOrRichTextLinks('text');
 
         expect(actualOutput).toBeTruthy();
     });
@@ -115,7 +172,7 @@ describe('getChildCodenamesFromRichText', () => {
             'n270aa43a_0910_0193_cac2_00a2dc564224',
         ];
 
-        const actualOutput = getChildCodenamesFromRichText(richTextContent);
+        const actualOutput = getChildCodenamesFromRichText(richTextWithLinks);
 
         expect(actualOutput).toEqual(expectedOutput);
     });
@@ -142,7 +199,7 @@ describe('getChildInfosFromRichText', () => {
             isItem: false,
         }];
 
-        const actualOutput = getChildInfosFromRichText(richTextContent);
+        const actualOutput = getChildInfosFromRichText(richTextWithLinks);
 
         expect(actualOutput).toEqual(expectedOutput);
     });

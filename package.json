@@ -18,6 +18,7 @@
     "builtin-status-codes": "3.0.0",
     "cheerio": "1.0.0-rc.3",
     "cloud-docs-shared-code": "3.2.3",
+    "consola": "2.10.1",
     "html2commonmark": "0.6.1",
     "htmlparser2": "4.0.0",
     "ieee754": "1.1.13",

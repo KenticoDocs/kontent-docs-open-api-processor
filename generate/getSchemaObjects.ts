@@ -50,6 +50,10 @@ export type ISchemas =
     | ISchemaString
     | IPropertyReferencingASchema;
 
+export interface ISchemasObject {
+    readonly [key: string]: SchemaObject;
+}
+
 export const getSchemaObject = (schemaData: ISchemas, items: IPreprocessedItems): SchemaObject => {
     switch (schemaData.contentType) {
         case 'zapi_schema__allof': {
@@ -88,7 +92,6 @@ export const getSchemaObject = (schemaData: ISchemas, items: IPreprocessedItems)
     }
 };
 
-// TODO ma v sebe vzdy pole aj ked ide len o 1 schemu
 const getSchemaAllOfObject = (schemaData: ISchemaAllOf, items: IPreprocessedItems): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getSchemaProperty(resolveSchemaObjectsInRichTextElement(schemaData.schemas, items), 'allOf'),
@@ -220,7 +223,7 @@ const resolveDiscriminatorMapItemObject = (field: string, items: IPreprocessedIt
         const discriminatorMapItemData = getItemData<IDiscriminatorMapItem>(codename, items);
 
         const value = discriminatorMapItemData.discriminatorValue;
-        mapItemObjects[value] = resolveSchemaObjectsInLinkedItems(discriminatorMapItemData.schema, items)[0];
+        mapItemObjects[value] = resolveSchemaObjectsInLinkedItems(discriminatorMapItemData.schema, items)[0].$ref;
     }
 
     return mapItemObjects;

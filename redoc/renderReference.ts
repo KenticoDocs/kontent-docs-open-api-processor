@@ -1,5 +1,6 @@
 const fs = require('fs');
 const cmd = require('node-cmd');
+const consola = require('consola');
 
 import { IPreprocessedData } from 'cloud-docs-shared-code';
 import { storeReferenceDataToBlobStorage } from '../external/blobManager';
@@ -29,9 +30,13 @@ const renderRedoc = (jsonPath: string, htmlPath: string, blob: IPreprocessedData
 
     cmd.get(
         `node ./redoc/redoc-cli/index.js bundle ${jsonPath} -t ${template} ${options}`,
-        async () => {
+        async (err, data, stderr) => {
             const html = getReferenceHtml(htmlPath);
             await storeReferenceDataToBlobStorage(html, blob.zapiSpecificationCodename, blob.operation);
+
+            consola.log(err);
+            consola.log(data);
+            consola.log(stderr);
         },
     );
 };

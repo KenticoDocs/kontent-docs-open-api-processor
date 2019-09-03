@@ -11,12 +11,12 @@ import {
 } from './descriptionLabels';
 import {
     getItemData,
-    isNonEmptyString,
+    isNonEmptyTextOrRichTextLinks,
 } from './helpers';
 
 const html2commonmark = require('html2commonmark');
 
-export const processRichTextWithChildren = (richTextField: string, items: IPreprocessedItems) => {
+export const processRichTextWithChildren = (richTextField: string, items: IPreprocessedItems): string => {
     const richTextWithLabelledChildren = labelChildren<ICallout | ICodeSamples | ICodeSample>(
         labelAllChildItems)(richTextField, items);
     const commonMarkText = convertToCommonMark(richTextWithLabelledChildren);
@@ -24,7 +24,7 @@ export const processRichTextWithChildren = (richTextField: string, items: IPrepr
     return resolveChildrenAndCodeBlocks(commonMarkText, items);
 };
 
-export const processRichTextWithOnlyCallouts = (richTextField: string, items: IPreprocessedItems) => {
+export const processRichTextWithOnlyCallouts = (richTextField: string, items: IPreprocessedItems): string => {
     const richTextWithLabelledChildren = labelChildren<ICallout>(
         labelChildCallouts)(richTextField, items);
     const commonMarkText = convertToCommonMark(richTextWithLabelledChildren);
@@ -101,7 +101,7 @@ const getSyntaxHighlighter = (programmingLanguages: string[]): string => {
             return '';
         }
         default: {
-            return isNonEmptyString(language)
+            return isNonEmptyTextOrRichTextLinks(language)
                 ? language.toLowerCase()
                 : '';
         }
