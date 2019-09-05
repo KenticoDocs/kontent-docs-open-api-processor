@@ -37,7 +37,7 @@ interface IChildInfo {
     readonly codename: string,
 }
 
-export const getChildInfosFromRichText = (content: string): IChildInfo[] => {
+export const getChildrenInfosFromRichText = (content: string): IChildInfo[] => {
     const root = parser.parse(content);
     const objectElements = root.querySelectorAll('p');
 

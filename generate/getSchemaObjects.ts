@@ -30,7 +30,7 @@ import {
     getSchemaProperty,
 } from '../utils/getProperties';
 import {
-    getChildInfosFromRichText,
+    getChildrenInfosFromRichText,
     getItemData,
 } from '../utils/helpers';
 import {
@@ -145,6 +145,7 @@ const getSchemaObjectObject = (schemaData: ISchemaObject, items: IPreprocessedIt
         ...getSchemaCommonElements(schemaData, items),
         ...getArrayPropertyFromString(schemaData.required, 'required'),
         ...getSchemaProperty(properties, 'properties'),
+        // TODO pridaj dovnutra x-additionalPropertiesName objekt
         ...getSchemaProperty(additionalProperties, 'additionalProperties'),
         type: 'object',
     };
@@ -153,7 +154,7 @@ const getSchemaObjectObject = (schemaData: ISchemaObject, items: IPreprocessedIt
 const getSchemaOneOfObject = (schemaData: ISchemaOneOf, items: IPreprocessedItems): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getDiscriminatorProperty(schemaData.discriminator, 'discriminator', items),
-    ...getSchemaProperty(resolveSchemaObjectsInLinkedItems(schemaData.schemas, items), 'oneOf'),
+    ...getSchemaProperty(resolveSchemaObjectsInRichTextElement(schemaData.schemas, items), 'oneOf'),
 });
 
 const getSchemaStringObject = (schemaData: ISchemaString, items: IPreprocessedItems): SchemaObject => ({
@@ -197,7 +198,7 @@ const getSchemaObjectPropertyElements = (schemaData: ISchemaObjectPropertyElemen
 });
 
 export const resolveDiscriminatorObject = (field: string, items: IPreprocessedItems): DiscriminatorObject => {
-    const discriminatorInfo = getChildInfosFromRichText(field);
+    const discriminatorInfo = getChildrenInfosFromRichText(field);
 
     if (discriminatorInfo.length === 1) {
         const codename = discriminatorInfo[0].codename;
@@ -215,7 +216,7 @@ interface IMapItemObjects {
 }
 
 const resolveDiscriminatorMapItemObject = (field: string, items: IPreprocessedItems): IMapItemObjects => {
-    const discriminatorMapInfos = getChildInfosFromRichText(field);
+    const discriminatorMapInfos = getChildrenInfosFromRichText(field);
     const mapItemObjects = {};
 
     for (const info of discriminatorMapInfos) {

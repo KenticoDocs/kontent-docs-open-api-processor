@@ -38,7 +38,7 @@ import {
 } from '../utils/getProperties';
 import {
     getChildCodenamesFromRichText,
-    getChildInfosFromRichText,
+    getChildrenInfosFromRichText,
     getItemData,
     getReferenceObject,
     isNonEmptyTextOrRichTextLinks,
@@ -66,12 +66,17 @@ export const generateApiSpecification = (data: IPreprocessedData): OpenApiSpec =
         info: resolveInfoObject(apiSpecification, items),
         openapi: '3.0.2',
         paths: resolvePathsObject(apiSpecification.categories, items),
-        security: [],
         servers: resolveServerObjects(apiSpecification.servers, items),
         tags: resolveTagObjects(apiSpecification.categories, items),
+        ...getMultipleChoiceProperty(apiSpecification.apiStatus, 'x-api-status'),
     };
 
-    openApiSpecification.components = resolveComponentsObject(apiSpecification, items);
+    openApiSpecification.components = resolveComponentsObject();
+
+    const securitySchemeObject = resolveSecurityScheme(apiSpecification, items, openApiSpecification);
+    if (securitySchemeObject) {
+        openApiSpecification.components.securitySchemes = securitySchemeObject;
+    }
 
     return openApiSpecification;
 };
@@ -133,6 +138,7 @@ const resolveServerObjects = (serversElement: string, items: IPreprocessedItems)
 const resolveTagObjects = (categoriesCodenames: string[], items: IPreprocessedItems): TagObject[] =>
     categoriesCodenames.map((codename) => {
         const categoryData = getItemData<ICategory>(codename, items);
+        resolveSchemaObjectsInRichTextElement(categoryData.description, items);
 
         return {
             description: processRichTextWithChildren(categoryData.description, items),
@@ -194,7 +200,7 @@ export const resolveRequestBodyObject = (
     richTextField: string,
     items: IPreprocessedItems,
 ): RequestBodyObject | ReferenceObject => {
-    const requestBodyInfo = getChildInfosFromRichText(richTextField);
+    const requestBodyInfo = getChildrenInfosFromRichText(richTextField);
     if (requestBodyInfo.length === 1) {
         const codename = requestBodyInfo[0].codename;
         const requestBodyData = getItemData<IRequestBody>(codename, items);
@@ -225,7 +231,7 @@ export const resolveRequestBodyObject = (
 export const resolveResponseObjects = (richTextField: string, items: IPreprocessedItems): ResponsesObject => {
     const responsesObject: ResponsesObject = {};
 
-    const responsesInfo = getChildInfosFromRichText(richTextField);
+    const responsesInfo = getChildrenInfosFromRichText(richTextField);
     responsesInfo.forEach((responseInfo) => {
         const codename = responseInfo.codename;
         const responseData = getItemData<IResponse>(codename, items);
@@ -272,34 +278,37 @@ const resolveHeadersObjects = (codenames: string[], items: IPreprocessedItems): 
         })
         .reduce((accumulated, current) => Object.assign(accumulated, current), {});
 
-const resolveComponentsObject = (apiSpecification: IZapiSpecification, items: IPreprocessedItems): ComponentsObject => {
-    const securitySchemes = resolveSecuritySchemeObject(apiSpecification, items);
-    const securityComponents = securitySchemes
-        ? { [securitySchemes.name]: securitySchemes }
-        : {};
+const resolveComponentsObject = (): ComponentsObject => ({
+    parameters: parametersComponents,
+    requestBodies: requestBodiesComponents,
+    responses: responseComponents,
+    schemas: schemasComponents,
+});
 
-    return {
-        parameters: parametersComponents,
-        requestBodies: requestBodiesComponents,
-        responses: responseComponents,
-        schemas: schemasComponents,
-        securitySchemes: securityComponents,
-    };
-};
+export interface ISecuritychemeObject {
+    [name: string]: SecuritySchemeObject;
+}
 
-const resolveSecuritySchemeObject = (
-    apiSpecification: IZapiSpecification,
+const resolveSecurityScheme = (
+    apiSpecificationData: IZapiSpecification,
     items: IPreprocessedItems,
-): SecuritySchemeObject => {
-    if (apiSpecification.security.length === 1) {
-        const securitySchemeData = getItemData<ISecurityScheme>(apiSpecification.security[0], items);
+    openApiSpecification: OpenApiSpec,
+): ISecuritychemeObject => {
+    if (apiSpecificationData.security.length === 1) {
+        const securitySchemeData = getItemData<ISecurityScheme>(apiSpecificationData.security[0], items);
+
+        openApiSpecification.security = [{
+            [securitySchemeData.name]: [],
+        }];
 
         return {
-            description: processRichTextWithOnlyCallouts(securitySchemeData.description, items),
-            type: securitySchemeData.type[0] as SecuritySchemeType,
-            ...getMultipleChoiceProperty(securitySchemeData.apiKeyLocation, 'apiKeyLocation'),
-            ...getNonEmptyStringProperty(securitySchemeData.scheme, 'scheme'),
-            ...getNonEmptyStringProperty(securitySchemeData.bearerFormat, 'bearerFormat'),
+            [securitySchemeData.name]: {
+                description: processRichTextWithOnlyCallouts(securitySchemeData.description, items),
+                type: securitySchemeData.type[0] as SecuritySchemeType,
+                ...getMultipleChoiceProperty(securitySchemeData.apiKeyLocation, 'apiKeyLocation'),
+                ...getNonEmptyStringProperty(securitySchemeData.scheme, 'scheme'),
+                ...getNonEmptyStringProperty(securitySchemeData.bearerFormat, 'bearerFormat'),
+            },
         };
     }
 };
@@ -321,21 +330,24 @@ export const resolveSchemaObjectsInLinkedItems = (element: string[], items: IPre
 
 export const resolveSchemaObjectsInRichTextElement = (element: string, items: IPreprocessedItems): SchemaObject[] => {
     const schemas = [];
-    const schemasInfo = getChildInfosFromRichText(element);
+    const childrenInfos = getChildrenInfosFromRichText(element);
 
-    schemasInfo.forEach((schemaInfo) => {
+    childrenInfos.forEach((schemaInfo) => {
         const schemaData = getItemData<ISchemas>(schemaInfo.codename, items);
-        const identifier = isNonEmptyTextOrRichTextLinks(schemaData.name)
-            ? schemaData.name
-            : schemaInfo.codename;
 
-        if (schemaInfo.isItem) {
-            schemasComponents[identifier] = getSchemaObject(schemaData, items);
-            schemas.push(getReferenceObject('schemas', identifier));
-        } else {
-            const schemaObject = {};
-            schemaObject[identifier] = getSchemaObject(schemaData, items);
-            schemas.push(schemaObject);
+        if (schemaData.contentType.includes('schema')) {
+            const identifier = isNonEmptyTextOrRichTextLinks(schemaData.name)
+                ? schemaData.name
+                : schemaInfo.codename;
+
+            if (schemaInfo.isItem) {
+                schemasComponents[identifier] = getSchemaObject(schemaData, items);
+                schemas.push(getReferenceObject('schemas', identifier));
+            } else {
+                const schemaObject = {};
+                schemaObject[identifier] = getSchemaObject(schemaData, items);
+                schemas.push(schemaObject);
+            }
         }
     });
 

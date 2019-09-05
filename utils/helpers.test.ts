@@ -1,6 +1,6 @@
 import {
     getChildCodenamesFromRichText,
-    getChildInfosFromRichText,
+    getChildrenInfosFromRichText,
     getItemData,
     getReferenceObject,
     isNonEmptyDescription,
@@ -186,7 +186,7 @@ describe('getChildCodenamesFromRichText', () => {
     });
 });
 
-describe('getChildInfosFromRichText', () => {
+describe('getChildrenInfosFromRichText', () => {
     it('returns correct information about children from rich text element', () => {
         const expectedOutput = [{
             codename: 'first_known_item',
@@ -199,7 +199,7 @@ describe('getChildInfosFromRichText', () => {
             isItem: false,
         }];
 
-        const actualOutput = getChildInfosFromRichText(richTextWithLinks);
+        const actualOutput = getChildrenInfosFromRichText(richTextWithLinks);
 
         expect(actualOutput).toEqual(expectedOutput);
     });
@@ -207,7 +207,7 @@ describe('getChildInfosFromRichText', () => {
     it('returns an empty array for 0 child items in rich text element', () => {
         const expectedOutput = [];
 
-        const actualOutput = getChildInfosFromRichText(childlessRichTextContent);
+        const actualOutput = getChildrenInfosFromRichText(childlessRichTextContent);
 
         expect(actualOutput).toEqual(expectedOutput);
     });

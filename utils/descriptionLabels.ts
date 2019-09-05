@@ -3,8 +3,13 @@ import {
     ICodeSample,
     ICodeSamples,
     IPreprocessedItems,
+    ISchemaObject,
 } from 'cloud-docs-shared-code/reference/preprocessedModels';
-import { getItemData } from './helpers';
+import {
+    getItemData,
+    getReferenceObject,
+    isNonEmptyTextOrRichTextLinks,
+} from './helpers';
 
 const parser = require('node-html-parser');
 
@@ -50,7 +55,7 @@ export const labelChildren = <AllowedChildren>(labelFunction: LabelFunction<Allo
     };
 
 export const labelAllChildItems = (
-    item: ICallout | ICodeSamples | ICodeSample,
+    item: ICallout | ICodeSamples | ICodeSample | ISchemaObject,
     content: string,
     childElementData: IChildElementData,
     items: IPreprocessedItems,
@@ -71,8 +76,18 @@ export const labelAllChildItems = (
 
             return content.replace(childElementData.element, labelledContent);
         }
+        case 'zapi_schema__object': {
+            const codename = childElementData.codename;
+            const schemaData = getItemData<ISchemaObject>(codename, items);
+            const identifier = isNonEmptyTextOrRichTextLinks(schemaData.name)
+                ? schemaData.name
+                : codename;
+            const schemaReference = getReferenceObject('schemas', identifier).$ref;
+            const schemaDefinition = `<SchemaDefinition schemaRef=${schemaReference} />`;
+
+            return content.replace(childElementData.element, schemaDefinition);
+        }
         default: {
-            // TODO Add resolving of Schemas into <SchemaDefinition> tags
             return content;
         }
     }
