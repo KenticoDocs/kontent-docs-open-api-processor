@@ -83,7 +83,9 @@ export const labelAllChildItems = (
                 ? schemaData.name
                 : codename;
             const schemaReference = getReferenceObject('schemas', identifier).$ref;
-            const schemaDefinition = `<SchemaDefinition schemaRef=${schemaReference} />`;
+            const schemaDefinition = `<SchemaDefinition schemaRef=${schemaReference} ` +
+                'showReadOnly={true} showWriteOnly={true}' +
+                `\/>`;
 
             return content.replace(childElementData.element, schemaDefinition);
         }
