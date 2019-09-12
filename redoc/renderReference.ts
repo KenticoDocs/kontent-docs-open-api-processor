@@ -1,6 +1,7 @@
 const fs = require('fs');
 const cmd = require('node-cmd');
 const consola = require('consola');
+const shell = require('shelljs');
 
 import { Context } from '@azure/functions';
 import { IPreprocessedData } from 'cloud-docs-shared-code';
@@ -31,7 +32,7 @@ const renderRedoc = (jsonPath: string, htmlPath: string, blob: IPreprocessedData
 
     let date = Date.now();
 
-    cmd.get(
+    shell.exec(
         `node ./redoc/redoc-cli/index.js bundle ${jsonPath} -t ${template} ${options}`,
         async (err, data, stderr) => {
             date = Date.now() - date;
