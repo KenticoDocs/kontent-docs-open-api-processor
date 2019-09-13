@@ -24,41 +24,7 @@ const mkdirp = require('mkdirp');
 const YargsParser = require('yargs');
 const BUNDLES_DIR = path_1.dirname(require.resolve('kentico-cloud-docs-redoc'));
 /* tslint:disable-next-line */
-YargsParser.command('serve <spec>', 'start the server', yargs => {
-    yargs.positional('spec', {
-        describe: 'path or URL to your spec',
-    });
-    yargs.option('s', {
-        alias: 'ssr',
-        describe: 'Enable server-side rendering',
-        type: 'boolean',
-    });
-    yargs.option('p', {
-        alias: 'port',
-        type: 'number',
-        default: 8080,
-    });
-    yargs.option('w', {
-        alias: 'watch',
-        type: 'boolean',
-    });
-    yargs.demandOption('spec');
-    return yargs;
-}, (argv) => __awaiter(this, void 0, void 0, function * () {
-    const config = {
-        ssr: argv.ssr,
-        watch: argv.watch,
-        templateFileName: argv.template,
-        templateOptions: argv.templateOptions || {},
-        redocOptions: argv.options || {},
-    };
-    try {
-        yield serve(argv.port, argv.spec, config);
-    } catch (e) {
-        handleError(e);
-    }
-}))
-    .command('bundle <spec>', 'bundle spec into zero-dependency HTML-file', yargs => {
+YargsParser.command('bundle <spec>', 'bundle spec into zero-dependency HTML-file', yargs => {
     yargs.positional('spec', {
         describe: 'path or URL to your spec',
     });
@@ -108,55 +74,6 @@ YargsParser.command('serve <spec>', 'start the server', yargs => {
     .options('options', {
     describe: 'ReDoc options, use dot notation, e.g. options.nativeScrollbars',
 }).argv;
-function serve(port, pathToSpec, options = {}) {
-    return __awaiter(this, void 0, void 0, function * () {
-        let spec = yield redoc_1.loadAndBundleSpec(pathToSpec);
-        let pageHTML = yield getPageHTML(spec, pathToSpec, options);
-        const server = http_1.createServer((request, response) => {
-            console.time('GET ' + request.url);
-            if (request.url === '/redoc.standalone.js') {
-                respondWithGzip(fs_1.createReadStream(path_1.join(BUNDLES_DIR, 'redoc.standalone.js'), 'utf8'), request, response, {
-                    'Content-Type': 'application/javascript',
-                });
-            } else if (request.url === '/') {
-                respondWithGzip(pageHTML, request, response);
-            } else if (request.url === '/spec.json') {
-                const specStr = JSON.stringify(spec, null, 2);
-                respondWithGzip(specStr, request, response, {
-                    'Content-Type': 'application/json',
-                });
-            } else {
-                response.writeHead(404);
-                response.write('Not found');
-                response.end();
-            }
-            console.timeEnd('GET ' + request.url);
-        });
-        console.log();
-        server.listen(port, () => console.log(`Server started: http://127.0.0.1:${port}`));
-        if (options.watch && fs_1.existsSync(pathToSpec)) {
-            const pathToSpecDirectory = path_1.resolve(path_1.dirname(pathToSpec));
-            const watchOptions = {
-                ignored: /(^|[\/\\])\../,
-            };
-            const watcher = chokidar_1.watch(pathToSpecDirectory, watchOptions);
-            const log = console.log.bind(console);
-            watcher
-                .on('change', (path) => __awaiter(this, void 0, void 0, function * () {
-                log(`${path} changed, updating docs`);
-                try {
-                    spec = yield redoc_1.loadAndBundleSpec(pathToSpec);
-                    pageHTML = yield getPageHTML(spec, pathToSpec, options);
-                    log('Updated successfully');
-                } catch (e) {
-                    console.error('Error while updating: ', e.message);
-                }
-            }))
-                .on('error', error => console.error(`Watcher error: ${error}`))
-                .on('ready', () => log(`👀  Watching ${pathToSpecDirectory} for changes...`));
-        }
-    });
-}
 function bundle(pathToSpec, options = {}) {
     return __awaiter(this, void 0, void 0, function * () {
         const start = Date.now();
