@@ -13,9 +13,7 @@ import OpenAPISchemaValidator from 'openapi-schema-validator';
 import { OpenAPIV3 } from 'openapi-types';
 import { storeReferenceDataToBlobStorage } from '../external/blobManager';
 import { generateApiSpecification } from '../generate/generateApiSpecification';
-import { writeIntoFile } from '../redoc/fileHelpers';
 import { renderReference } from '../redoc/renderReference';
-import { jsonFilePath } from './filePaths';
 
 const eventGridEvent: AzureFunction = async (
     context: Context,
@@ -57,15 +55,13 @@ const eventGridEvent: AzureFunction = async (
 
         const stringSpec = JSON.stringify(specification);
 
-        writeIntoFile(jsonFilePath, stringSpec);
-
         // TODO Remove this before merge to master
         await storeReferenceDataToBlobStorage(
             stringSpec,
             `TEMPORARY-${blob.zapiSpecificationCodename}`,
             blob.operation,
         );
-        renderReference(stringSpec, blob, context);
+        renderReference(stringSpec, blob);
 
         context.res = {
             body: stringSpec,

@@ -8,11 +8,21 @@ const redoc = require('kentico-cloud-docs-redoc');
 const path = require('path');
 const BUNDLES_DIR = path.dirname(require.resolve('kentico-cloud-docs-redoc'));
 
-export const getHTML = async (jsonPath, templatePath, options): Promise<string> => {
+interface IRedocConfig {
+    readonly cdn: boolean,
+    readonly output: string,
+    readonly redocOptions: object,
+    readonly ssr: boolean,
+    readonly templateFileName: string,
+    readonly templateOptions: object,
+    readonly title: string,
+}
+
+export const getHtml = async (templatePath: string, jsonPath: string, options: any): Promise<string> => {
     const start = Date.now();
     const spec = await redoc.loadAndBundleSpec(jsonPath);
 
-    const config = {
+    const config: IRedocConfig = {
         cdn: false,
         output: 'redoc-static.html',
         redocOptions: options || {},
@@ -22,7 +32,7 @@ export const getHTML = async (jsonPath, templatePath, options): Promise<string> 
         title: 'ReDoc documentation',
     };
 
-    const pageHTML = await getPageHTML(spec, jsonPath, config);
+    const pageHTML = await getPageHtml(spec, jsonPath, config);
     const sizeInKiB = Math.ceil(Buffer.byteLength(pageHTML) / 1024);
     const time = Date.now() - start;
     consola.log(`\n🎉 bundled successfully in: ${options.output} (${sizeInKiB} KiB) [⏱ ${time / 1000}s]`);
@@ -30,10 +40,10 @@ export const getHTML = async (jsonPath, templatePath, options): Promise<string> 
     return pageHTML;
 };
 
-const getPageHTML = async (
-    spec,
-    jsonPath,
-    { ssr, cdn, title, templateFileName, templateOptions, redocOptions },
+const getPageHtml = async (
+    spec: string,
+    jsonPath: string,
+    { ssr, cdn, title, templateFileName, templateOptions, redocOptions }: IRedocConfig,
 ): Promise<string> => {
     let html;
     let css;
@@ -54,6 +64,7 @@ const getPageHTML = async (
     }
     templateFileName = templateFileName || path.join(__dirname, './template.hbs');
     const template = handlebars.compile(fs.readFileSync(templateFileName).toString());
+
     return template({
         redocHTML: `
     <div id="redoc">${(ssr && html) || ''}</div>
