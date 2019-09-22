@@ -10,11 +10,10 @@ export const storeReferenceDataToBlobStorage = async (
     operation: ReferenceOperation,
 ): Promise<void> => {
     const containerUrl = getContainerUrl();
-    const blobId = getBlobId(codename, operation);
-    const blobURL = BlobStorage.BlobURL.fromContainerURL(containerUrl, blobId);
-    const blockBlobURL = BlobStorage.BlockBlobURL.fromBlobURL(blobURL);
+    const blobName = getBlobName(codename, operation);
+    const blobURL = BlobStorage.BlockBlobURL.fromContainerURL(containerUrl, blobName);
 
-    await blockBlobURL.upload(
+    await blobURL.upload(
         BlobStorage.Aborter.none,
         dataBlob,
         dataBlob.length,
@@ -35,7 +34,7 @@ const getContainerUrl = (): ContainerURL => {
     return BlobStorage.ContainerURL.fromServiceURL(serviceUrl, Configuration.keys.azureContainerName);
 };
 
-export const getBlobId = (codename: string, operation: ReferenceOperation): string => {
+export const getBlobName = (codename: string, operation: ReferenceOperation): string => {
     switch (operation) {
         case ReferenceOperation.Update:
         case ReferenceOperation.Initialize: {

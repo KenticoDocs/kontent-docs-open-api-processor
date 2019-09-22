@@ -11,7 +11,7 @@ import {
 } from './descriptionLabels';
 import {
     getItemData,
-    isNonEmptyTextOrRichTextLinks,
+    isNonEmptyTextOrRichTextLinksElement,
 } from './helpers';
 
 const html2commonmark = require('html2commonmark');
@@ -101,7 +101,7 @@ const getSyntaxHighlighter = (programmingLanguages: string[]): string => {
             return '';
         }
         default: {
-            return isNonEmptyTextOrRichTextLinks(language)
+            return isNonEmptyTextOrRichTextLinksElement(language)
                 ? language.toLowerCase()
                 : '';
         }

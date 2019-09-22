@@ -41,7 +41,7 @@ import {
     getChildrenInfosFromRichText,
     getItemData,
     getReferenceObject,
-    isNonEmptyTextOrRichTextLinks,
+    isNonEmptyTextOrRichTextLinksElement,
 } from '../utils/helpers';
 import {
     processRichTextWithChildren,
@@ -317,7 +317,7 @@ export const resolveSchemaObjectsInLinkedItems = (element: string[], items: IPre
     const schemas = [];
     element.map((codename) => {
         const schemaData = getItemData<ISchemas>(codename, items);
-        const identifier = isNonEmptyTextOrRichTextLinks(schemaData.name)
+        const identifier = isNonEmptyTextOrRichTextLinksElement(schemaData.name)
             ? schemaData.name
             : codename;
 
@@ -336,7 +336,7 @@ export const resolveSchemaObjectsInRichTextElement = (element: string, items: IP
         const schemaData = getItemData<ISchemas>(schemaInfo.codename, items);
 
         if (schemaData.contentType.includes('schema')) {
-            const identifier = isNonEmptyTextOrRichTextLinks(schemaData.name)
+            const identifier = isNonEmptyTextOrRichTextLinksElement(schemaData.name)
                 ? schemaData.name
                 : schemaInfo.codename;
 

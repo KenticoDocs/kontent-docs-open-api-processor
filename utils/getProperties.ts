@@ -9,8 +9,8 @@ import {
     resolveDiscriminatorObject,
 } from '../generate/getSchemaObjects';
 import {
-    isNonEmptyDescription,
-    isNonEmptyTextOrRichTextLinks,
+    isNonEmptyDescriptionElement,
+    isNonEmptyTextOrRichTextLinksElement,
 } from './helpers';
 import { processRichTextWithOnlyCallouts } from './richTextProcessing';
 
@@ -33,7 +33,7 @@ interface IObjectWithProperty {
 
 export const getNonEmptyStringProperty = (element: string, propertyName: string): IObjectWithProperty | {} =>
     getGenericProperty<string, string>(
-        isNonEmptyTextOrRichTextLinks,
+        isNonEmptyTextOrRichTextLinksElement,
         (value) => value,
     )(element, propertyName);
 
@@ -43,7 +43,7 @@ export const getDescriptionProperty = (
     items: IPreprocessedItems,
 ): IObjectWithProperty | {} =>
     getGenericProperty<string, string>(
-        isNonEmptyDescription,
+        isNonEmptyDescriptionElement,
         (x) => processRichTextWithOnlyCallouts(x, items),
     )(element, propertyName);
 
@@ -61,7 +61,7 @@ export const getBooleanProperty = (element: string[], propertyName: string): IOb
 
 export const getArrayPropertyFromString = (element: string, propertyName: string): IObjectWithProperty | {} =>
     getGenericProperty<string, string[]>(
-        isNonEmptyTextOrRichTextLinks,
+        isNonEmptyTextOrRichTextLinksElement,
         (x) => x.split(','),
     )(element, propertyName);
 
@@ -83,7 +83,7 @@ export const getDiscriminatorProperty = (
     items: IPreprocessedItems,
 ): DiscriminatorObject | {} =>
     getGenericProperty<string, DiscriminatorObject>(
-        isNonEmptyTextOrRichTextLinks,
+        isNonEmptyTextOrRichTextLinksElement,
         (x) => resolveDiscriminatorObject(x, items),
     )(field, propertyName);
 

@@ -8,7 +8,7 @@ import {
 import {
     getItemData,
     getReferenceObject,
-    isNonEmptyTextOrRichTextLinks,
+    isNonEmptyTextOrRichTextLinksElement,
 } from './helpers';
 
 const parser = require('node-html-parser');
@@ -79,7 +79,7 @@ export const labelAllChildItems = (
         case 'zapi_schema__object': {
             const codename = childElementData.codename;
             const schemaData = getItemData<ISchemaObject>(codename, items);
-            const identifier = isNonEmptyTextOrRichTextLinks(schemaData.name)
+            const identifier = isNonEmptyTextOrRichTextLinksElement(schemaData.name)
                 ? schemaData.name
                 : codename;
             const schemaReference = getReferenceObject('schemas', identifier).$ref;

@@ -4,13 +4,13 @@ import { IPreprocessedItems } from 'cloud-docs-shared-code';
 const striptags = require('striptags');
 const parser = require('node-html-parser');
 
-export const isNonEmptyDescription = (text: string): boolean => {
+export const isNonEmptyDescriptionElement = (text: string): boolean => {
     const textWithoutTags = striptags(text).trim();
 
     return textWithoutTags && textWithoutTags.length > 0;
 };
 
-export const isNonEmptyTextOrRichTextLinks = (text: string): boolean => {
+export const isNonEmptyTextOrRichTextLinksElement = (text: string): boolean => {
     if (!text) {
         return false;
     }

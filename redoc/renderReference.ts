@@ -2,10 +2,7 @@ const fs = require('fs');
 
 import { IPreprocessedData } from 'cloud-docs-shared-code';
 import { storeReferenceDataToBlobStorage } from '../external/blobManager';
-import {
-    htmlFilePath,
-    jsonFilePath,
-} from '../kcd-open-api-processor/filePaths';
+import { jsonFilePath } from '../kcd-open-api-processor/filePaths';
 import { getHtml } from './redoc-cli';
 import { prerenderOptions } from './redoc-cli/prerender-options';
 import { resolveComponents } from './resolveComponents';
@@ -18,11 +15,11 @@ export const renderReference = (json: string, blob: IPreprocessedData): void => 
     stream.once('open', async () => {
         stream.write(finalJson);
         stream.end();
-        await renderRedoc(jsonFilePath, htmlFilePath, blob);
+        await renderRedoc(jsonFilePath, blob);
     });
 };
 
-const renderRedoc = async (jsonPath: string, htmlPath: string, blob: IPreprocessedData): Promise<void> => {
+const renderRedoc = async (jsonPath: string, blob: IPreprocessedData): Promise<void> => {
     const options = prerenderOptions.join(' ');
     const template = './redoc/redoc-cli/template2.hbs';
 

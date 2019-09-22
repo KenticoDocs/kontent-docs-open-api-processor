@@ -3,8 +3,8 @@ import {
     getChildrenInfosFromRichText,
     getItemData,
     getReferenceObject,
-    isNonEmptyDescription,
-    isNonEmptyTextOrRichTextLinks,
+    isNonEmptyDescriptionElement,
+    isNonEmptyTextOrRichTextLinksElement,
 } from './helpers';
 
 interface ITestingCodeSamples {
@@ -56,89 +56,89 @@ const richTextWithLinks = '<p ' +
 
 const childlessRichTextContent = '<p>Some text.</p>';
 
-describe('isNonEmptyDescription', () => {
+describe('isNonEmptyDescriptionElement', () => {
     it('returns false on null', () => {
-        const actualOutput = isNonEmptyDescription(null);
+        const actualOutput = isNonEmptyDescriptionElement(null);
 
         expect(actualOutput).toBeFalsy();
     });
 
     it('returns false on undefined', () => {
-        const actualOutput = isNonEmptyDescription(undefined);
+        const actualOutput = isNonEmptyDescriptionElement(undefined);
 
         expect(actualOutput).toBeFalsy();
     });
 
     it('returns false on whitespace', () => {
-        const actualOutput = isNonEmptyDescription(' ');
+        const actualOutput = isNonEmptyDescriptionElement(' ');
 
         expect(actualOutput).toBeFalsy();
     });
 
     it('returns false on an empty string', () => {
-        const actualOutput = isNonEmptyDescription('');
+        const actualOutput = isNonEmptyDescriptionElement('');
 
         expect(actualOutput).toBeFalsy();
     });
 
     it('returns false on an empty rich text tag', () => {
-        const actualOutput = isNonEmptyDescription('<p><br></p>');
+        const actualOutput = isNonEmptyDescriptionElement('<p><br></p>');
 
         expect(actualOutput).toBeFalsy();
     });
 
     it('returns false on an rich text with only links', () => {
-        const actualOutput = isNonEmptyDescription(richTextWithLinks);
+        const actualOutput = isNonEmptyDescriptionElement(richTextWithLinks);
 
         expect(actualOutput).toBeFalsy();
     });
 
     it('returns true on a valid string', () => {
-        const actualOutput = isNonEmptyDescription('text');
+        const actualOutput = isNonEmptyDescriptionElement('text');
 
         expect(actualOutput).toBeTruthy();
     });
 });
 
-describe('isNonEmptyTextOrRichTextLinks', () => {
+describe('isNonEmptyTextOrRichTextLinksElement', () => {
     it('returns false on null', () => {
-        const actualOutput = isNonEmptyTextOrRichTextLinks(null);
+        const actualOutput = isNonEmptyTextOrRichTextLinksElement(null);
 
         expect(actualOutput).toBeFalsy();
     });
 
     it('returns false on undefined', () => {
-        const actualOutput = isNonEmptyTextOrRichTextLinks(undefined);
+        const actualOutput = isNonEmptyTextOrRichTextLinksElement(undefined);
 
         expect(actualOutput).toBeFalsy();
     });
 
     it('returns false on whitespace', () => {
-        const actualOutput = isNonEmptyTextOrRichTextLinks(' ');
+        const actualOutput = isNonEmptyTextOrRichTextLinksElement(' ');
 
         expect(actualOutput).toBeFalsy();
     });
 
     it('returns false on an empty string', () => {
-        const actualOutput = isNonEmptyTextOrRichTextLinks('');
+        const actualOutput = isNonEmptyTextOrRichTextLinksElement('');
 
         expect(actualOutput).toBeFalsy();
     });
 
     it('returns false on an empty rich text tag', () => {
-        const actualOutput = isNonEmptyTextOrRichTextLinks('<p><br></p>');
+        const actualOutput = isNonEmptyTextOrRichTextLinksElement('<p><br></p>');
 
         expect(actualOutput).toBeFalsy();
     });
 
     it('returns true on an rich text with only links', () => {
-        const actualOutput = isNonEmptyTextOrRichTextLinks(richTextWithLinks);
+        const actualOutput = isNonEmptyTextOrRichTextLinksElement(richTextWithLinks);
 
         expect(actualOutput).toBeTruthy();
     });
 
     it('returns true on a valid string', () => {
-        const actualOutput = isNonEmptyTextOrRichTextLinks('text');
+        const actualOutput = isNonEmptyTextOrRichTextLinksElement('text');
 
         expect(actualOutput).toBeTruthy();
     });
