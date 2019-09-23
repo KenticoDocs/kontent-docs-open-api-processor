@@ -10,7 +10,6 @@ const BUNDLES_DIR = path.dirname(require.resolve('kentico-cloud-docs-redoc'));
 
 interface IRedocConfig {
     readonly cdn: boolean,
-    readonly output: string,
     readonly redocOptions: object,
     readonly ssr: boolean,
     readonly templateFileName: string,
@@ -24,7 +23,6 @@ export const getHtml = async (templatePath: string, jsonPath: string, options: a
 
     const config: IRedocConfig = {
         cdn: false,
-        output: 'redoc-static.html',
         redocOptions: options || {},
         ssr: true,
         templateFileName: templatePath,
@@ -35,7 +33,7 @@ export const getHtml = async (templatePath: string, jsonPath: string, options: a
     const pageHTML = await getPageHtml(spec, jsonPath, config);
     const sizeInKiB = Math.ceil(Buffer.byteLength(pageHTML) / 1024);
     const time = Date.now() - start;
-    consola.log(`\n🎉 bundled successfully in: ${options.output} (${sizeInKiB} KiB) [⏱ ${time / 1000}s]`);
+    consola.log(`\n🎉 bundled successfully: (${sizeInKiB} KiB) [⏱ ${time / 1000}s]`);
 
     return pageHTML;
 };

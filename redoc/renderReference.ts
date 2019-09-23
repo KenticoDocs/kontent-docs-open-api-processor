@@ -4,7 +4,7 @@ import { IPreprocessedData } from 'cloud-docs-shared-code';
 import { storeReferenceDataToBlobStorage } from '../external/blobManager';
 import { jsonFilePath } from '../kcd-open-api-processor/filePaths';
 import { getHtml } from './redoc-cli';
-import { prerenderOptions } from './redoc-cli/prerender-options';
+import { prerenderOptions } from './redoc-cli/prerenderOptions';
 import { resolveComponents } from './resolveComponents';
 
 export const renderReference = (json: string, blob: IPreprocessedData): void => {
@@ -20,10 +20,9 @@ export const renderReference = (json: string, blob: IPreprocessedData): void => 
 };
 
 const renderRedoc = async (jsonPath: string, blob: IPreprocessedData): Promise<void> => {
-    const options = prerenderOptions.join(' ');
     const template = './redoc/redoc-cli/template2.hbs';
 
-    const html = await getHtml(template, jsonPath, options);
+    const html = await getHtml(template, jsonPath, prerenderOptions);
     await storeReferenceDataToBlobStorage(html, blob.zapiSpecificationCodename, blob.operation);
 };
 
