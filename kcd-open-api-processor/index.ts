@@ -61,7 +61,7 @@ const eventGridEvent: AzureFunction = async (
             `TEMPORARY-${blob.zapiSpecificationCodename}`,
             blob.operation,
         );
-        renderReference(stringSpec, blob);
+        await renderReference(stringSpec, blob);
 
         context.res = {
             body: stringSpec,

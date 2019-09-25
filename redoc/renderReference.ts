@@ -7,16 +7,12 @@ import { getHtml } from './redoc-cli';
 import { prerenderOptions } from './redoc-cli/prerenderOptions';
 import { resolveComponents } from './resolveComponents';
 
-export const renderReference = (json: string, blob: IPreprocessedData): void => {
+export const renderReference = async (json: string, blob: IPreprocessedData): Promise<void> => {
     const jsonAsYaml = JSON.parse(json);
     const finalJson = JSON.stringify(traverseObject(jsonAsYaml, resolveComponents));
-    const stream = fs.createWriteStream(jsonFilePath);
+    await fs.promises.writeFile(jsonFilePath, finalJson);
 
-    stream.once('open', async () => {
-        stream.write(finalJson);
-        stream.end();
-        await renderRedoc(jsonFilePath, blob);
-    });
+    await renderRedoc(jsonFilePath, blob);
 };
 
 const renderRedoc = async (jsonPath: string, blob: IPreprocessedData): Promise<void> => {
