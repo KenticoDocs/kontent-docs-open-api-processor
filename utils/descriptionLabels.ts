@@ -5,11 +5,7 @@ import {
     IPreprocessedItems,
     ISchemaObject,
 } from 'cloud-docs-shared-code/reference/preprocessedModels';
-import {
-    getItemData,
-    getReferenceObject,
-    isNonEmptyTextOrRichTextLinksElement,
-} from './helpers';
+import { getItemData } from './helpers';
 
 const parser = require('node-html-parser');
 
@@ -64,31 +60,27 @@ export const labelAllChildItems = (
         case 'callout': {
             return labelChildCallouts(item as ICallout, content, childElementData);
         }
+
         case 'code_samples': {
             const codeSamplesItem = item as ICodeSamples;
             const labelledContent = getLabelledCodeSamples(codeSamplesItem.codeSamples, items);
 
             return content.replace(childElementData.element, labelledContent);
         }
+
         case 'code_sample': {
             const { programmingLanguage, platform } = item as ICodeSample;
             const labelledContent = getLabelledCodeSample(childElementData.codename, programmingLanguage, platform);
 
             return content.replace(childElementData.element, labelledContent);
         }
-        case 'zapi_schema__object': {
-            const codename = childElementData.codename;
-            const schemaData = getItemData<ISchemaObject>(codename, items);
-            const identifier = isNonEmptyTextOrRichTextLinksElement(schemaData.name)
-                ? schemaData.name
-                : codename;
-            const schemaReference = getReferenceObject('schemas', identifier).$ref;
-            const schemaDefinition = `<SchemaDefinition schemaRef=${schemaReference} ` +
-                'showReadOnly={true} showWriteOnly={true}' +
-                `\/>`;
 
-            return content.replace(childElementData.element, schemaDefinition);
+        case 'zapi_schema__object': {
+            const schemaMark = getCodenameMark(item.codename);
+
+            return content.replace(childElementData.element, schemaMark);
         }
+
         default: {
             return content;
         }

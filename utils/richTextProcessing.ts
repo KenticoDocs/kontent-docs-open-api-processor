@@ -3,6 +3,7 @@ import {
     ICodeSample,
     ICodeSamples,
     IPreprocessedItems,
+    ISchemaObject,
 } from 'cloud-docs-shared-code/reference/preprocessedModels';
 import {
     labelAllChildItems,
@@ -11,6 +12,7 @@ import {
 } from './descriptionLabels';
 import {
     getItemData,
+    getReferenceObject,
     isNonEmptyTextOrRichTextLinksElement,
 } from './helpers';
 
@@ -57,17 +59,33 @@ const insertChildrenIntoCommonMark = (content: string, items: IPreprocessedItems
         const codename = match[2];
         const childMarkToReplace = `<!--codename=${codename}-->`;
 
-        const childData = getItemData<ICodeSample | ICallout>(codename, items);
+        const childData = getItemData<ICodeSample | ICallout | ISchemaObject>(codename, items);
         switch (childData.contentType) {
             case 'callout': {
                 resolvedContent = resolvedContent.replace(childMarkToReplace, (childData as ICallout).content);
                 break;
             }
+
             case 'code_sample': {
                 const codeBlock = getCodeBlock(childData as ICodeSample);
                 resolvedContent = resolvedContent.replace(childMarkToReplace, codeBlock);
                 break;
             }
+
+            case 'zapi_schema__object': {
+                const name = (childData as ISchemaObject).name;
+                const identifier = isNonEmptyTextOrRichTextLinksElement(name)
+                    ? name
+                    : codename;
+                const schemaReference = getReferenceObject('schemas', identifier).$ref;
+                const schemaDefinition = `<SchemaDefinition schemaRef=${schemaReference} ` +
+                    'showReadOnly={true} showWriteOnly={true} ' +
+                    `\/> `;
+
+                resolvedContent = resolvedContent.replace(childMarkToReplace, schemaDefinition);
+                break;
+            }
+
             default: {
                 throw Error(`Invalid child of type ${childData.contentType} inside description element.`);
             }
