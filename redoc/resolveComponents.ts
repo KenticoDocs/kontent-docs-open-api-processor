@@ -60,7 +60,9 @@ const resolveCodeSample = (content: string): string => {
             `data-platform-code="${platform.toLowerCase()}"><div class="infobar"><ul class="infobar__languages">` +
             `<li class="infobar__lang">${language}</li></ul><div class="infobar__copy">` +
             `</div></div><div class="clean-code">${codeSampleContent.trim()
-                .replace(/\n\n/g, '\n&nbsp;\n')}</div></pre>`);
+                .replace(/\n\n/g, '\n&nbsp;\n')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')}</div></pre>`);
     }
 
     return $.root().html().trim();
