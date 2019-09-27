@@ -78,7 +78,7 @@ const insertChildrenIntoCommonMark = (content: string, items: IPreprocessedItems
                     ? name
                     : codename;
                 const schemaReference = getReferenceObject('schemas', identifier).$ref;
-                const schemaDefinition = `<SchemaDefinition schemaRef=${schemaReference} ` +
+                const schemaDefinition = `<SchemaDefinition schemaRef=\"${schemaReference}\" ` +
                     'showReadOnly={true} showWriteOnly={true} ' +
                     `\/> `;
 
