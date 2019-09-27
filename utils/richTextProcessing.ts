@@ -62,7 +62,10 @@ const insertChildrenIntoCommonMark = (content: string, items: IPreprocessedItems
         const childData = getItemData<ICodeSample | ICallout | ISchemaObject>(codename, items);
         switch (childData.contentType) {
             case 'callout': {
-                resolvedContent = resolvedContent.replace(childMarkToReplace, (childData as ICallout).content);
+                const calloutContent = (childData as ICallout).content
+                    .replace(/({~)/g, '<code>')
+                    .replace(/(~})/g, '<\/code>');
+                resolvedContent = resolvedContent.replace(childMarkToReplace, calloutContent);
                 break;
             }
 
