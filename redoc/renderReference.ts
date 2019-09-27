@@ -1,5 +1,6 @@
 const fs = require('fs');
 
+import { OpenApiSpec } from '@loopback/openapi-v3-types';
 import { IPreprocessedData } from 'cloud-docs-shared-code';
 import { storeReferenceDataToBlobStorage } from '../external/blobManager';
 import { jsonFilePath } from '../kcd-open-api-processor/filePaths';
@@ -7,9 +8,8 @@ import { getHtml } from './redoc-cli';
 import { prerenderOptions } from './redoc-cli/prerenderOptions';
 import { resolveComponents } from './resolveComponents';
 
-export const renderReference = async (json: string, blob: IPreprocessedData): Promise<void> => {
-    const jsonAsYaml = JSON.parse(json);
-    const finalJson = JSON.stringify(traverseObject(jsonAsYaml, resolveComponents));
+export const renderReference = async (json: OpenApiSpec, blob: IPreprocessedData): Promise<void> => {
+    const finalJson = JSON.stringify(traverseObject(json, resolveComponents));
     await fs.promises.writeFile(jsonFilePath, finalJson);
 
     await renderRedoc(jsonFilePath, blob);

@@ -38,7 +38,7 @@ const eventGridEvent: AzureFunction = async (
 
         const validationResults = validator.validate(specification as OpenAPIV3.Document);
 
-        // TODO napoj na notifiera
+        // TODO napoj na notifiera - nemoze zastavit generovanie HTML
         // if (validationResults.errors.length > 0) {
         //     context.log.error(validationResults.errors);
         //
@@ -61,7 +61,7 @@ const eventGridEvent: AzureFunction = async (
             `TEMPORARY-${blob.zapiSpecificationCodename}`,
             blob.operation,
         );
-        await renderReference(stringSpec, blob);
+        await renderReference(specification, blob);
 
         context.res = {
             body: stringSpec,

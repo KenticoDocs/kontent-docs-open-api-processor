@@ -1,4 +1,4 @@
-import { resolveChildrenAndCodeBlocks } from './richTextProcessing';
+import { resolveChildrenAndCodeBlocks } from './commonMarkProcessing';
 
 describe('resolveChildrenAndCodeBlocks', () => {
     const items = {

@@ -28,6 +28,7 @@ import {
     IServer,
     IZapiSpecification,
 } from 'cloud-docs-shared-code/reference/preprocessedModels';
+import { fixPrimaryHeadings } from '../utils/commonMarkProcessing';
 import {
     getBooleanProperty,
     getDescriptionProperty,
@@ -82,8 +83,11 @@ export const generateApiSpecification = (data: IPreprocessedData): OpenApiSpec =
 };
 
 const resolveInfoObject = (apiSpecification: IZapiSpecification, items: IPreprocessedItems): InfoObject => {
+    // Only InfoObject's description can contain <h1> heading
+    const description = fixPrimaryHeadings(processRichTextWithChildren(apiSpecification.description, items));
+
     const infoObject: InfoObject = {
-        description: processRichTextWithChildren(apiSpecification.description, items),
+        description,
         title: apiSpecification.title,
         version: apiSpecification.version,
         ...getNonEmptyStringProperty(apiSpecification.termsOfService, 'termsOfService'),
