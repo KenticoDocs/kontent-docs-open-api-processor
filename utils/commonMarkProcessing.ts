@@ -10,6 +10,8 @@ import {
     isNonEmptyTextOrRichTextLinksElement,
 } from './helpers';
 
+const html2commonmark = require('html2commonmark');
+
 export const resolveChildrenAndCodeBlocks = (content: string, items: IPreprocessedItems): string => {
     const contentWithFixedHeadings = fixSecondaryHeading(content);
     const contentWithChildrenContent = insertChildrenIntoCommonMark(contentWithFixedHeadings, items);
@@ -129,3 +131,20 @@ export const fixPrimaryHeadings = (content: string): string => {
 
     return resolvedContent;
 };
+
+export const convertToCommonMark = (html: string): string => {
+    const converter = new html2commonmark.JSDomConverter();
+    const renderer = new html2commonmark.Renderer();
+    const abstractSyntaxTree = converter.convert(html);
+
+    const commonMarkText = renderer.render(abstractSyntaxTree);
+
+    return sanitizeCommonMark(commonMarkText);
+};
+
+const sanitizeCommonMark = (content: string) =>
+    content
+        .replace(/\\>/g, '>')
+        .replace(/\\</g, '<')
+        .replace(/\\\./g, '.')
+        .replace(/\\_/g, '_');

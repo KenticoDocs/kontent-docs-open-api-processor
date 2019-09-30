@@ -17,9 +17,8 @@ interface IRedocConfig {
     readonly title: string,
 }
 
-export const getHtml = async (templatePath: string, jsonPath: string, options: any): Promise<string> => {
+export const getHtml = async (templatePath: string, specification: object, options: any): Promise<string> => {
     const start = Date.now();
-    const spec = await redoc.loadAndBundleSpec(jsonPath);
 
     const config: IRedocConfig = {
         cdn: false,
@@ -30,7 +29,7 @@ export const getHtml = async (templatePath: string, jsonPath: string, options: a
         title: 'ReDoc documentation',
     };
 
-    const pageHTML = await getPageHtml(spec, jsonPath, config);
+    const pageHTML = await getPageHtml(specification, config);
     const sizeInKiB = Math.ceil(Buffer.byteLength(pageHTML) / 1024);
     const time = Date.now() - start;
     consola.log(`\n🎉 bundled successfully: (${sizeInKiB} KiB) [⏱ ${time / 1000}s]`);
@@ -39,8 +38,7 @@ export const getHtml = async (templatePath: string, jsonPath: string, options: a
 };
 
 const getPageHtml = async (
-    spec: string,
-    jsonPath: string,
+    spec: object,
     { ssr, cdn, title, templateFileName, templateOptions, redocOptions }: IRedocConfig,
 ): Promise<string> => {
     let html;
@@ -50,8 +48,7 @@ const getPageHtml = async (
     if (ssr) {
         consola.log('Prerendering docs');
         // @ts-ignore
-        const specUrl = redocOptions.specUrl || (isURL(jsonPath) ? jsonPath : undefined);
-        const store = await redoc.createStore(spec, specUrl, redocOptions);
+        const store = await redoc.createStore(spec, undefined, redocOptions);
         const sheet = new styledComponents.ServerStyleSheet();
         html = server.renderToString(sheet.collectStyles(React.createElement(redoc.Redoc, { store })));
         css = sheet.getStyleTags();
@@ -84,9 +81,6 @@ const getPageHtml = async (
         title,
     });
 };
-
-const isURL = (str: string): boolean =>
-    /^(https?:)\/\//m.test(str);
 
 const sanitizeJSONString = (str: string): string =>
     escapeClosingScriptTag(escapeUnicode(str));
