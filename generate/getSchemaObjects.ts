@@ -25,6 +25,7 @@ import {
     getDescriptionProperty,
     getDiscriminatorProperty,
     getMultipleChoiceProperty,
+    getNonEmptyStringAsObjectProperty,
     getNonEmptyStringProperty,
     getNumberProperty,
     getSchemaProperty,
@@ -93,7 +94,7 @@ export const getSchemaObject = (schemaData: ISchemas, items: IPreprocessedItems)
 };
 
 const getSchemaAllOfObject = (schemaData: ISchemaAllOf, items: IPreprocessedItems): SchemaObject => ({
-    ...getSchemaCommonElements(schemaData, items),
+    ...getSchemaCommonElements(schemaData, items, 'allOf'),
     ...getSchemaProperty(resolveSchemaObjectsInRichTextElement(schemaData.schemas, items), 'allOf'),
 });
 
@@ -142,7 +143,7 @@ const getSchemaObjectObject = (schemaData: ISchemaObject, items: IPreprocessedIt
     const additionalProperties = resolveSchemaObjectsInRichTextElement(schemaData.additionalProperties, items);
 
     return {
-        ...getSchemaCommonElements(schemaData, items),
+        ...getSchemaCommonElements(schemaData, items, 'object'),
         ...getArrayPropertyFromString(schemaData.required, 'required'),
         ...getSchemaProperty(properties, 'properties'),
         // TODO pridaj dovnutra x-additionalPropertiesName objekt
@@ -180,10 +181,18 @@ interface ISchemaObjectCommonElements {
 const getSchemaCommonElements = (
     schemaData: ISchemaElements,
     items: IPreprocessedItems,
-): ISchemaObjectCommonElements => ({
-    ...getDescriptionProperty(schemaData.description, 'description', items),
-    ...getNonEmptyStringProperty(schemaData.example, 'example'),
-});
+    contentType: string = '',
+): ISchemaObjectCommonElements => {
+    // Schema: Object and Schema: AllOf's example elements have to be saved as JSON objects
+    const example = (contentType === 'object' || contentType === 'allOf')
+        ? getNonEmptyStringAsObjectProperty(schemaData.example, 'example')
+        : getNonEmptyStringProperty(schemaData.example, 'example');
+
+    return {
+        ...getDescriptionProperty(schemaData.description, 'description', items),
+        ...example,
+    };
+};
 
 interface ISchemaObjectBooleanElements {
     readonly nullable?: boolean,

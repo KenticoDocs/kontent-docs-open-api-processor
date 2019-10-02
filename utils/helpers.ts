@@ -4,12 +4,14 @@ import { IPreprocessedItems } from 'cloud-docs-shared-code';
 const striptags = require('striptags');
 const parser = require('node-html-parser');
 
+// Used with regular Rich Text elements
 export const isNonEmptyDescriptionElement = (text: string): boolean => {
     const textWithoutTags = striptags(text).trim();
 
     return textWithoutTags && textWithoutTags.length > 0;
 };
 
+// Used with Text elements + Rich Text elements that serve as containers for components/linked items
 export const isNonEmptyTextOrRichTextLinksElement = (text: string): boolean => {
     if (!text) {
         return false;

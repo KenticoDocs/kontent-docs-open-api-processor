@@ -18,13 +18,16 @@ const traverseObject = (
     obj: object,
     callback: (obj: object, key: string) => object,
 ): object => {
-    Object.keys(obj).forEach((key) => {
-        obj = callback(obj, key);
+    // TODO - Check the null condition
+    if (obj) {
+        Object.keys(obj).forEach((key) => {
+            obj = callback(obj, key);
 
-        if (typeof obj[key] === 'object') {
-            traverseObject(obj[key], callback);
-        }
-    });
+            if (typeof obj[key] === 'object') {
+                traverseObject(obj[key], callback);
+            }
+        });
+    }
 
     return obj;
 };

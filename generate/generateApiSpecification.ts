@@ -34,6 +34,7 @@ import {
     getDescriptionProperty,
     getHeadersProperty,
     getMultipleChoiceProperty,
+    getNonEmptyStringAsObjectProperty,
     getNonEmptyStringProperty,
     getSchemaProperty,
 } from '../utils/getProperties';
@@ -58,6 +59,9 @@ const parametersComponents = {};
 const requestBodiesComponents = {};
 const responseComponents = {};
 const schemasComponents = {};
+
+const processedSchemaObjects = {};
+const recursiveSchemaCodenames = [];
 
 export const generateApiSpecification = (data: IPreprocessedData): OpenApiSpec => {
     const items = data.items;
@@ -218,7 +222,7 @@ export const resolveRequestBodyObject = (
         };
         requestBodyObject.content[requestBodyData.mediaType[0]] = {
             ...getSchemaProperty(schema, 'schema'),
-            ...getNonEmptyStringProperty(requestBodyData.example, 'example'),
+            ...getNonEmptyStringAsObjectProperty(requestBodyData.example, 'example'),
         };
 
         if (requestBodyInfo[0].isItem) {
@@ -252,7 +256,7 @@ export const resolveResponseObjects = (richTextField: string, items: IPreprocess
             responseObject.content = {
                 [responseData.mediaType[0]]: {
                     ...getSchemaProperty(schema, 'schema'),
-                    ...getNonEmptyStringProperty(responseData.example, 'example'),
+                    ...getNonEmptyStringAsObjectProperty(responseData.example, 'example'),
                 },
             };
         }
@@ -282,12 +286,18 @@ const resolveHeadersObjects = (codenames: string[], items: IPreprocessedItems): 
         })
         .reduce((accumulated, current) => Object.assign(accumulated, current), {});
 
-const resolveComponentsObject = (): ComponentsObject => ({
-    parameters: parametersComponents,
-    requestBodies: requestBodiesComponents,
-    responses: responseComponents,
-    schemas: schemasComponents,
-});
+const resolveComponentsObject = (): ComponentsObject => {
+    recursiveSchemaCodenames.forEach((codename) => {
+        schemasComponents[codename] = processedSchemaObjects[codename][codename];
+    });
+
+    return {
+        parameters: parametersComponents,
+        requestBodies: requestBodiesComponents,
+        responses: responseComponents,
+        schemas: schemasComponents,
+    };
+};
 
 export interface ISecuritychemeObject {
     [name: string]: SecuritySchemeObject;
@@ -324,9 +334,16 @@ export const resolveSchemaObjectsInLinkedItems = (element: string[], items: IPre
         const identifier = isNonEmptyTextOrRichTextLinksElement(schemaData.name)
             ? schemaData.name
             : codename;
+        if (!processedSchemaObjects[identifier]) {
+            processedSchemaObjects[identifier] = 'being_processed';
 
-        schemasComponents[identifier] = getSchemaObject(schemaData, items);
-        schemas.push(getReferenceObject('schemas', identifier));
+            schemasComponents[identifier] = getSchemaObject(schemaData, items);
+            const schemaReferenceObject = getReferenceObject('schemas', identifier);
+            schemas.push(schemaReferenceObject);
+            processedSchemaObjects[identifier] = schemaReferenceObject;
+        } else {
+            schemas.push(processedSchemaObjects[identifier]);
+        }
     });
 
     return schemas;
@@ -344,13 +361,32 @@ export const resolveSchemaObjectsInRichTextElement = (element: string, items: IP
                 ? schemaData.name
                 : schemaInfo.codename;
 
-            if (schemaInfo.isItem) {
-                schemasComponents[identifier] = getSchemaObject(schemaData, items);
-                schemas.push(getReferenceObject('schemas', identifier));
+            if (!processedSchemaObjects[identifier]) {
+                processedSchemaObjects[identifier] = 'being processed';
+
+                if (schemaInfo.isItem) {
+                    const schemaReferenceObject = getReferenceObject('schemas', identifier);
+                    schemas.push(schemaReferenceObject);
+                    processedSchemaObjects[identifier] = schemaReferenceObject;
+
+                    schemasComponents[identifier] = getSchemaObject(schemaData, items);
+                } else {
+                    const schemaObject = {};
+                    schemaObject[identifier] = getSchemaObject(schemaData, items);
+                    schemas.push(schemaObject);
+
+                    processedSchemaObjects[identifier] = schemaObject;
+                }
             } else {
-                const schemaObject = {};
-                schemaObject[identifier] = getSchemaObject(schemaData, items);
-                schemas.push(schemaObject);
+                if (processedSchemaObjects[identifier] === 'being processed') {
+                    // The schema is still being processed - link only a reference to it
+                    recursiveSchemaCodenames.push(identifier);
+                    schemas.push({
+                        [identifier]: getReferenceObject('schemas', identifier),
+                    });
+                } else {
+                    schemas.push(processedSchemaObjects[identifier]);
+                }
             }
         }
     });

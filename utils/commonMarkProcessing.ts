@@ -118,7 +118,7 @@ const getSyntaxHighlighter = (programmingLanguages: string[]): string => {
 
 // <h1> heading gets translated in commonMark to ===, which has to be replaced with #
 export const fixPrimaryHeadings = (content: string): string => {
-    const mainHeadingExtractor = new RegExp('([A-Za-z0-9_]*)\\n===\\n', 'g');
+    const mainHeadingExtractor = new RegExp('([A-Za-z0-9_ .]*)\\n===\\n', 'g');
     let match = mainHeadingExtractor.exec(content);
 
     let resolvedContent = content;
@@ -146,5 +146,8 @@ const sanitizeCommonMark = (content: string) =>
     content
         .replace(/\\>/g, '>')
         .replace(/\\</g, '<')
+        .replace(/\\\[/g, '[')
+        .replace(/\\]/g, ']')
+        .replace(/\\&/g, '&')
         .replace(/\\\./g, '.')
         .replace(/\\_/g, '_');

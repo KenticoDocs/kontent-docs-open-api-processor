@@ -21,15 +21,20 @@ export const getGenericProperty = <ElementType, ToInsert>(
     condition: ConditionFunction<ElementType>,
     insertion: InsertionFunction<ElementType, ToInsert>,
 ) =>
-    (element: ElementType, propertyName: string): object => ({
-        ...(condition(element))
+    (element: ElementType, propertyName: string): object =>
+        condition(element)
             ? { [propertyName]: insertion(element) }
-            : {},
-    });
+            : {};
 
 interface IObjectWithProperty {
     [key: string]: string,
 }
+
+export const getNonEmptyStringAsObjectProperty = (element: string, propertyName: string): IObjectWithProperty | {} =>
+    getGenericProperty<string, object>(
+        isNonEmptyDescriptionElement,
+        (value) => JSON.parse(value),
+    )(element, propertyName);
 
 export const getNonEmptyStringProperty = (element: string, propertyName: string): IObjectWithProperty | {} =>
     getGenericProperty<string, string>(
