@@ -12,7 +12,7 @@ import { IPreprocessedData } from 'cloud-docs-shared-code/reference/preprocessed
 import OpenAPISchemaValidator from 'openapi-schema-validator';
 import { OpenAPIV3 } from 'openapi-types';
 import { storeReferenceDataToBlobStorage } from '../external/blobManager';
-import { generateApiSpecification } from '../generate/generateApiSpecification';
+import { initializeApiSpecificationGenerator } from '../generate/getApiSpecificationGenerator';
 import { renderReference } from '../redoc/renderReference';
 
 const eventGridEvent: AzureFunction = async (
@@ -30,7 +30,8 @@ const eventGridEvent: AzureFunction = async (
             Configuration.keys.azureAccountName,
             Configuration.keys.azureStorageKey,
         );
-        const specification = generateApiSpecification(blob);
+        const apiSpecificationGenerator = initializeApiSpecificationGenerator();
+        const specification = apiSpecificationGenerator.generateApiSpecification(blob);
 
         const validator = new OpenAPISchemaValidator({
             version: 3,

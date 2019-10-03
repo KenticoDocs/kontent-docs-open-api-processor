@@ -34,10 +34,7 @@ import {
     getChildrenInfosFromRichText,
     getItemData,
 } from '../utils/helpers';
-import {
-    resolveSchemaObjectsInLinkedItems,
-    resolveSchemaObjectsInRichTextElement,
-} from './generateApiSpecification';
+import { getApiSpecificationGenerator } from './getApiSpecificationGenerator';
 
 export type ISchemas =
     ISchemaAllOf
@@ -95,18 +92,27 @@ export const getSchemaObject = (schemaData: ISchemas, items: IPreprocessedItems)
 
 const getSchemaAllOfObject = (schemaData: ISchemaAllOf, items: IPreprocessedItems): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items, 'allOf'),
-    ...getSchemaProperty(resolveSchemaObjectsInRichTextElement(schemaData.schemas, items), 'allOf'),
+    ...getSchemaProperty(
+        getApiSpecificationGenerator()
+            .resolveSchemaObjectsInRichTextElement(schemaData.schemas, items), 'allOf',
+    ),
 });
 
 const getSchemaAnyOfObject = (schemaData: ISchemaAnyOf, items: IPreprocessedItems): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getSchemaObjectPropertyElements(schemaData),
-    ...getSchemaProperty(resolveSchemaObjectsInLinkedItems(schemaData.schemas, items), 'anyOf'),
+    ...getSchemaProperty(
+        getApiSpecificationGenerator()
+            .resolveSchemaObjectsInLinkedItems(schemaData.schemas, items), 'anyOf',
+    ),
 });
 
 const getSchemaArrayObject = (schemaData: ISchemaArray, items: IPreprocessedItems): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
-    ...getSchemaProperty(resolveSchemaObjectsInRichTextElement(schemaData.items, items), 'items'),
+    ...getSchemaProperty(
+        getApiSpecificationGenerator()
+            .resolveSchemaObjectsInRichTextElement(schemaData.items, items), 'items',
+    ),
     ...getBooleanProperty(schemaData.uniqueItems, 'uniqueItems'),
     type: 'array',
 });
@@ -139,8 +145,11 @@ const getSchemaNumberObject = (schemaData: ISchemaNumber, items: IPreprocessedIt
 });
 
 const getSchemaObjectObject = (schemaData: ISchemaObject, items: IPreprocessedItems): SchemaObject => {
-    const properties = resolveSchemaObjectsInRichTextElement(schemaData.properties, items);
-    const additionalProperties = resolveSchemaObjectsInRichTextElement(schemaData.additionalProperties, items);
+    const apiSpecificationGenerator = getApiSpecificationGenerator();
+    const properties = apiSpecificationGenerator
+        .resolveSchemaObjectsInRichTextElement(schemaData.properties, items);
+    const additionalProperties = apiSpecificationGenerator
+        .resolveSchemaObjectsInRichTextElement(schemaData.additionalProperties, items);
 
     return {
         ...getSchemaCommonElements(schemaData, items, 'object'),
@@ -155,7 +164,10 @@ const getSchemaObjectObject = (schemaData: ISchemaObject, items: IPreprocessedIt
 const getSchemaOneOfObject = (schemaData: ISchemaOneOf, items: IPreprocessedItems): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items),
     ...getDiscriminatorProperty(schemaData.discriminator, 'discriminator', items),
-    ...getSchemaProperty(resolveSchemaObjectsInRichTextElement(schemaData.schemas, items), 'oneOf'),
+    ...getSchemaProperty(
+        getApiSpecificationGenerator()
+            .resolveSchemaObjectsInRichTextElement(schemaData.schemas, items), 'oneOf',
+    ),
 });
 
 const getSchemaStringObject = (schemaData: ISchemaString, items: IPreprocessedItems): SchemaObject => ({
@@ -171,7 +183,7 @@ const getSchemaStringObject = (schemaData: ISchemaString, items: IPreprocessedIt
 
 const getPropertyReferencingObject = (data: IPropertyReferencingASchema, items: IPreprocessedItems): SchemaObject =>
     // Element is required to have exactly 1 schema item inserted
-    resolveSchemaObjectsInLinkedItems(data.schema, items)[0];
+    getApiSpecificationGenerator().resolveSchemaObjectsInLinkedItems(data.schema, items)[0];
 
 interface ISchemaObjectCommonElements {
     readonly description?: string,
@@ -233,7 +245,8 @@ const resolveDiscriminatorMapItemObject = (field: string, items: IPreprocessedIt
         const discriminatorMapItemData = getItemData<IDiscriminatorMapItem>(codename, items);
 
         const value = discriminatorMapItemData.discriminatorValue;
-        mapItemObjects[value] = resolveSchemaObjectsInLinkedItems(discriminatorMapItemData.schema, items)[0].$ref;
+        mapItemObjects[value] = getApiSpecificationGenerator()
+            .resolveSchemaObjectsInLinkedItems(discriminatorMapItemData.schema, items)[0].$ref;
     }
 
     return mapItemObjects;
