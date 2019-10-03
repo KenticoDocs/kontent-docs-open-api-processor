@@ -12,11 +12,49 @@ import {
 
 const html2commonmark = require('html2commonmark');
 
+// <h1> heading gets translated in commonMark to ===, which has to be replaced with #
+export const fixPrimaryHeadings = (content: string): string => {
+    const mainHeadingExtractor = new RegExp('([A-Za-z0-9_ .]*)\\n===\\n', 'g');
+    let match = mainHeadingExtractor.exec(content);
+
+    let resolvedContent = content;
+    while (match && match[1]) {
+        const heading = match[1];
+        resolvedContent = resolvedContent.replace(`${heading}\n===`, `# ${heading}\n`);
+
+        match = mainHeadingExtractor.exec(content);
+    }
+
+    return resolvedContent;
+};
+
+export const convertToCommonMark = (html: string, items: IPreprocessedItems): string => {
+    const converter = new html2commonmark.JSDomConverter();
+    const renderer = new html2commonmark.Renderer();
+    const abstractSyntaxTree = converter.convert(html);
+    const commonMarkText = renderer.render(abstractSyntaxTree);
+
+    const sanizedCommonMark = sanitizeCommonMark(commonMarkText);
+
+    return resolveChildrenAndCodeBlocks(sanizedCommonMark, items);
+};
+
+const sanitizeCommonMark = (content: string): string =>
+    content
+        .replace(/\\>/g, '>')
+        .replace(/\\</g, '<')
+        .replace(/\\\[/g, '[')
+        .replace(/\\]/g, ']')
+        .replace(/\\&/g, '&')
+        .replace(/\\\./g, '.')
+        .replace(/\\_/g, '_');
+
 export const resolveChildrenAndCodeBlocks = (content: string, items: IPreprocessedItems): string => {
     const contentWithFixedHeadings = fixSecondaryHeading(content);
     const contentWithChildrenContent = insertChildrenIntoCommonMark(contentWithFixedHeadings, items);
+    const contentWithResolvedCodeWithinTables = resolveCodeTagsInTables(contentWithChildrenContent);
 
-    return contentWithChildrenContent
+    return contentWithResolvedCodeWithinTables
         .replace(/({~)/g, '`')
         .replace(/(~})/g, '`');
 };
@@ -87,6 +125,25 @@ const insertChildrenIntoCommonMark = (content: string, items: IPreprocessedItems
     return resolvedContent;
 };
 
+const resolveCodeTagsInTables = (content: string): string => {
+    const tableContentExtractor = new RegExp('<table>(\n|.)*?</table>', 'g');
+
+    let tableMatch = tableContentExtractor.exec(content);
+    let resolvedContent = content;
+    while (tableMatch && tableMatch[0]) {
+        const tableContent = tableMatch[0];
+        const tableContentResolved = tableContent
+            .replace(/({~)/g, '<code>')
+            .replace(/(~})/g, '</code>');
+
+        resolvedContent = resolvedContent.replace(tableContent, tableContentResolved);
+
+        tableMatch = tableContentExtractor.exec(content);
+    }
+
+    return resolvedContent;
+};
+
 const getCodeBlock = (codeSampleData: ICodeSample): string => {
     const code = codeSampleData.code;
     const syntaxHighlighter = getSyntaxHighlighter(codeSampleData.programmingLanguage);
@@ -115,39 +172,3 @@ const getSyntaxHighlighter = (programmingLanguages: string[]): string => {
         }
     }
 };
-
-// <h1> heading gets translated in commonMark to ===, which has to be replaced with #
-export const fixPrimaryHeadings = (content: string): string => {
-    const mainHeadingExtractor = new RegExp('([A-Za-z0-9_ .]*)\\n===\\n', 'g');
-    let match = mainHeadingExtractor.exec(content);
-
-    let resolvedContent = content;
-    while (match && match[1]) {
-        const heading = match[1];
-        resolvedContent = resolvedContent.replace(`${heading}\n===`, `# ${heading}\n`);
-
-        match = mainHeadingExtractor.exec(content);
-    }
-
-    return resolvedContent;
-};
-
-export const convertToCommonMark = (html: string): string => {
-    const converter = new html2commonmark.JSDomConverter();
-    const renderer = new html2commonmark.Renderer();
-    const abstractSyntaxTree = converter.convert(html);
-
-    const commonMarkText = renderer.render(abstractSyntaxTree);
-
-    return sanitizeCommonMark(commonMarkText);
-};
-
-const sanitizeCommonMark = (content: string) =>
-    content
-        .replace(/\\>/g, '>')
-        .replace(/\\</g, '<')
-        .replace(/\\\[/g, '[')
-        .replace(/\\]/g, ']')
-        .replace(/\\&/g, '&')
-        .replace(/\\\./g, '.')
-        .replace(/\\_/g, '_');
