@@ -1,5 +1,6 @@
 export const prerenderOptions = {
     disableSearch: 'true',
+    hideDownloadButton: 'true',
     pathInMiddlePanel: 'true',
     theme: {
         colors: {
