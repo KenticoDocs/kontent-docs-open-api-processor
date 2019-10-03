@@ -22,7 +22,7 @@
     "html2commonmark": "0.6.1",
     "htmlparser2": "4.0.0",
     "ieee754": "1.1.13",
-    "kentico-cloud-docs-redoc": "2.0.13",
+    "kentico-cloud-docs-redoc": "2.0.14",
     "mobx": "5.13.0",
     "node-html-parser": "1.1.16",
     "openapi-schema-validator": "3.0.3",
