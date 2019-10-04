@@ -7,6 +7,7 @@ import {
     getBlobContainerName,
     getBlobFromStorage,
     IBlobEventGridEvent,
+    ReferenceOperation,
 } from 'cloud-docs-shared-code';
 import { IPreprocessedData } from 'cloud-docs-shared-code/reference/preprocessedModels';
 import OpenAPISchemaValidator from 'openapi-schema-validator';
@@ -30,6 +31,12 @@ const eventGridEvent: AzureFunction = async (
             Configuration.keys.azureAccountName,
             Configuration.keys.azureStorageKey,
         );
+
+        // API Specification has been deleted - Do not generate a new blob
+        if (blob.operation === ReferenceOperation.Delete) {
+            return;
+        }
+
         const apiSpecificationGenerator = initializeApiSpecificationGenerator();
         const specification = apiSpecificationGenerator.generateApiSpecification(blob);
 

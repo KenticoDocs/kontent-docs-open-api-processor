@@ -1213,13 +1213,13 @@ cliui@^5.0.0:
     strip-ansi "^5.2.0"
     wrap-ansi "^5.1.0"
 
-cloud-docs-shared-code@3.2.6:
-  version "3.2.6"
-  resolved "https://registry.yarnpkg.com/cloud-docs-shared-code/-/cloud-docs-shared-code-3.2.6.tgz#a90fef9dcab9512be269cf53cbc39ef5f886d628"
-  integrity sha512-1wR970JnMQdgWaerokEOCVUwFoiyX6ce8tXRqfeJFJ6kEsp/KbaQ3Lv/zOC5B8dqtqi8/+dPvTfSySreJMiyAQ==
+cloud-docs-shared-code@3.2.9:
+  version "3.2.9"
+  resolved "https://registry.yarnpkg.com/cloud-docs-shared-code/-/cloud-docs-shared-code-3.2.9.tgz#068b892435479ab331ffc56108a560eb2c6ed852"
+  integrity sha512-MEJO8d3CUzcozLLVPjddcWkr8DAomcjvufaqPefxY90kG4n7DO1/hSnRKdUVAMdhN2+COvMOx1PYGxOsFSfTxg==
   dependencies:
     "@azure/storage-blob" "10.4.0"
-    kentico-cloud-delivery "6.0.0-rc.3"
+    kentico-cloud-delivery "6.0.0-rc.5"
     rxjs "6.5.2"
 
 co@^4.6.0:
@@ -3189,19 +3189,19 @@ kentico-cloud-core@1.7.1:
   dependencies:
     axios "0.19.0"
 
-kentico-cloud-delivery@6.0.0-rc.3:
-  version "6.0.0-rc.3"
-  resolved "https://registry.yarnpkg.com/kentico-cloud-delivery/-/kentico-cloud-delivery-6.0.0-rc.3.tgz#d398d48f9d658d88db4d9d0cf647ed2f718ee26d"
-  integrity sha512-RiAECyS3QM8u3l/PK2HaOrCbBfCWccwtQElnjC3GpA9SGpzuN2iNfMBFG43YEZ3BRL+fKKhdBA/Z7iRjn5sMVQ==
+kentico-cloud-delivery@6.0.0-rc.5:
+  version "6.0.0-rc.5"
+  resolved "https://registry.yarnpkg.com/kentico-cloud-delivery/-/kentico-cloud-delivery-6.0.0-rc.5.tgz#aae688866d17abf2589f32a230aacbfa64ffe99c"
+  integrity sha512-hK5r3/4NHQwo512J84rtwyhlwTiPWrTfsRP6dz2NZX5HjRbudV8z8ssAOSRaiQbgmwXVinkUDnDnUpEeq/Em4w==
   dependencies:
     kentico-cloud-core "1.7.1"
     parse5 "5.1.0"
     reflect-metadata "0.1.13"
 
-kentico-cloud-docs-redoc@2.0.13:
-  version "2.0.13"
-  resolved "https://registry.yarnpkg.com/kentico-cloud-docs-redoc/-/kentico-cloud-docs-redoc-2.0.13.tgz#90124c188df999ec3776db0b23521c66c8c562ae"
-  integrity sha512-DySVLIUvA4R3AB3mIj3b/zBGusZp0TWrY+J9MHcyjGNId7L2aG305NWkLhVte0dMcCTzD+0CgwB867ch2Xv3LQ==
+kentico-cloud-docs-redoc@2.0.14:
+  version "2.0.14"
+  resolved "https://registry.yarnpkg.com/kentico-cloud-docs-redoc/-/kentico-cloud-docs-redoc-2.0.14.tgz#3758c51e8379a1ef95a24d72f0130bef04c3c09b"
+  integrity sha512-AqOcw36ZPp7HXMEnPCCN3xvKewffYzzrtxiIlQ7Y9MDM9InkIivVHh200u8tOsPphDADqbwEs8CNvZ2yG9WUsg==
   dependencies:
     classnames "^2.2.6"
     decko "^1.2.0"

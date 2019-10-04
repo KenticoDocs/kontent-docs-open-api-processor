@@ -117,16 +117,11 @@ export class ApiSpecificationGenerator {
             const identifier = isNonEmptyTextOrRichTextLinksElement(schemaData.name)
                 ? schemaData.name
                 : codename;
-            if (!this.processedSchemaObjects[identifier]) {
-                this.processedSchemaObjects[identifier] = 'being_processed';
 
-                this.schemasComponents[identifier] = getSchemaObject(schemaData, items);
-                const schemaReferenceObject = getReferenceObject('schemas', identifier);
-                schemas.push(schemaReferenceObject);
-                this.processedSchemaObjects[identifier] = schemaReferenceObject;
-            } else {
-                schemas.push(this.processedSchemaObjects[identifier]);
-            }
+            this.schemasComponents[identifier] = getSchemaObject(schemaData, items);
+            const schemaReferenceObject = getReferenceObject('schemas', identifier);
+            schemas.push(schemaReferenceObject);
+            this.processedSchemaObjects[identifier] = schemaReferenceObject;
         });
 
         return schemas;
