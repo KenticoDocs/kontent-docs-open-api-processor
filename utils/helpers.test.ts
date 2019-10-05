@@ -1,6 +1,4 @@
 import {
-    getChildCodenamesFromRichText,
-    getChildrenInfosFromRichText,
     getItemData,
     getReferenceObject,
     isNonEmptyDescriptionElement,
@@ -53,8 +51,6 @@ const richTextWithLinks = '<p ' +
     'data-rel="link" ' +
     'data-codename="second_known_item">' +
     '</p>';
-
-const childlessRichTextContent = '<p>Some text.</p>';
 
 describe('isNonEmptyDescriptionElement', () => {
     it('returns false on null', () => {
@@ -159,55 +155,6 @@ describe('getItemData', () => {
         const expectedOutput = undefined;
 
         const actualOutput = getItemData<ITestingCodeSamples>(notFoundCodename, items);
-
-        expect(actualOutput).toEqual(expectedOutput);
-    });
-});
-
-describe('getChildCodenamesFromRichText', () => {
-    it('returns codenames of children from rich text element', () => {
-        const expectedOutput = [
-            'first_known_item',
-            'second_known_item',
-            'n270aa43a_0910_0193_cac2_00a2dc564224',
-        ];
-
-        const actualOutput = getChildCodenamesFromRichText(richTextWithLinks);
-
-        expect(actualOutput).toEqual(expectedOutput);
-    });
-
-    it('returns an empty array for 0 child items in rich text element', () => {
-        const expectedOutput = [];
-
-        const actualOutput = getChildCodenamesFromRichText(childlessRichTextContent);
-
-        expect(actualOutput).toEqual(expectedOutput);
-    });
-});
-
-describe('getChildrenInfosFromRichText', () => {
-    it('returns correct information about children from rich text element', () => {
-        const expectedOutput = [{
-            codename: 'first_known_item',
-            isItem: true,
-        }, {
-            codename: 'second_known_item',
-            isItem: true,
-        }, {
-            codename: 'n270aa43a_0910_0193_cac2_00a2dc564224',
-            isItem: false,
-        }];
-
-        const actualOutput = getChildrenInfosFromRichText(richTextWithLinks);
-
-        expect(actualOutput).toEqual(expectedOutput);
-    });
-
-    it('returns an empty array for 0 child items in rich text element', () => {
-        const expectedOutput = [];
-
-        const actualOutput = getChildrenInfosFromRichText(childlessRichTextContent);
 
         expect(actualOutput).toEqual(expectedOutput);
     });

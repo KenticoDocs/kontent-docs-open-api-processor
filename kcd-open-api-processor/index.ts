@@ -16,7 +16,7 @@ import { storeReferenceDataToBlobStorage } from '../external/blobManager';
 import { initializeApiSpecificationGenerator } from '../generate/getApiSpecificationGenerator';
 import { renderReference } from '../redoc/renderReference';
 
-const eventGridEvent: AzureFunction = async (
+export const eventGridEvent: AzureFunction = async (
     context: Context,
     event: IBlobEventGridEvent,
 ): Promise<void> => {
@@ -79,5 +79,3 @@ const eventGridEvent: AzureFunction = async (
         throw `Message: ${error.message} \nStack Trace: ${error.stack}`;
     }
 };
-
-export default eventGridEvent;

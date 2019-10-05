@@ -4,13 +4,15 @@ import {
     CodeSampleMarkEnd,
     CodeSamplesMarkEnd,
     CodeSamplesMarkStart,
+    getChildCodenamesFromRichText,
+    getChildrenInfosFromRichText,
     getLabelledCallout,
     getLabelledCodeSample,
     getLabelledCodeSamples,
     labelAllChildItems,
     labelChildCallouts,
     labelChildren,
-} from './descriptionLabels';
+} from './richTextProcessing';
 
 describe('labelChildren', () => {
     const items = {
@@ -225,6 +227,77 @@ describe('getLabelledCodeSamples', () => {
         const expectedOutput = `${CodeSamplesMarkStart}${CodeSamplesMarkEnd}`;
 
         const actualOutput = getLabelledCodeSamples(codenames, items);
+
+        expect(actualOutput).toEqual(expectedOutput);
+    });
+});
+
+const richTextWithLinks = '<p ' +
+    'type="application/kenticocloud" ' +
+    'data-type="item" ' +
+    'data-rel="link" ' +
+    'data-codename="first_known_item">' +
+    '</p>\n' +
+    '<p ' +
+    'type="application/kenticocloud" ' +
+    'data-type="item" ' +
+    'data-rel="component" ' +
+    'data-codename="n270aa43a_0910_0193_cac2_00a2dc564224">' +
+    '</p>\n' +
+    '<p><br></p>' +
+    '<p ' +
+    'type="application/kenticocloud" ' +
+    'data-type="item" ' +
+    'data-rel="link" ' +
+    'data-codename="second_known_item">' +
+    '</p>';
+
+const childlessRichTextContent = '<p>Some text.</p>';
+
+describe('getChildCodenamesFromRichText', () => {
+    it('returns codenames of children from rich text element', () => {
+        const expectedOutput = [
+            'first_known_item',
+            'n270aa43a_0910_0193_cac2_00a2dc564224',
+            'second_known_item',
+        ];
+
+        const actualOutput = getChildCodenamesFromRichText(richTextWithLinks);
+
+        expect(actualOutput).toEqual(expectedOutput);
+    });
+
+    it('returns an empty array for 0 child items in rich text element', () => {
+        const expectedOutput = [];
+
+        const actualOutput = getChildCodenamesFromRichText(childlessRichTextContent);
+
+        expect(actualOutput).toEqual(expectedOutput);
+    });
+});
+
+describe('getChildrenInfosFromRichText', () => {
+    it('returns correct information about children from rich text element', () => {
+        const expectedOutput = [{
+            codename: 'first_known_item',
+            isItem: true,
+        }, {
+            codename: 'n270aa43a_0910_0193_cac2_00a2dc564224',
+            isItem: false,
+        }, {
+            codename: 'second_known_item',
+            isItem: true,
+        }];
+
+        const actualOutput = getChildrenInfosFromRichText(richTextWithLinks);
+
+        expect(actualOutput).toEqual(expectedOutput);
+    });
+
+    it('returns an empty array for 0 child items in rich text element', () => {
+        const expectedOutput = [];
+
+        const actualOutput = getChildrenInfosFromRichText(childlessRichTextContent);
 
         expect(actualOutput).toEqual(expectedOutput);
     });

@@ -31,9 +31,10 @@ import {
     getSchemaProperty,
 } from '../utils/getProperties';
 import {
-    getChildrenInfosFromRichText,
     getItemData,
+    isNonEmptyTextOrRichTextLinksElement,
 } from '../utils/helpers';
+import { getChildrenInfosFromRichText } from '../utils/richTextProcessing';
 import { getApiSpecificationGenerator } from './getApiSpecificationGenerator';
 
 export type ISchemas =
@@ -151,11 +152,16 @@ const getSchemaObjectObject = (schemaData: ISchemaObject, items: IPreprocessedIt
     const additionalProperties = apiSpecificationGenerator
         .resolveSchemaObjectsInRichTextElement(schemaData.additionalProperties, items);
 
+    if (additionalProperties && isNonEmptyTextOrRichTextLinksElement(schemaData.additionalPropertiesName)) {
+        additionalProperties.push({
+            'x-additionalPropertiesName': schemaData.additionalPropertiesName,
+        });
+    }
+
     return {
         ...getSchemaCommonElements(schemaData, items, 'object'),
         ...getArrayPropertyFromString(schemaData.required, 'required'),
         ...getSchemaProperty(properties, 'properties'),
-        // TODO pridaj dovnutra x-additionalPropertiesName objekt
         ...getSchemaProperty(additionalProperties, 'additionalProperties'),
         type: 'object',
     };

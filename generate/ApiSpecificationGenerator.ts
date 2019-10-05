@@ -44,13 +44,13 @@ import {
     getSchemaProperty,
 } from '../utils/getProperties';
 import {
-    getChildCodenamesFromRichText,
-    getChildrenInfosFromRichText,
     getItemData,
     getReferenceObject,
     isNonEmptyTextOrRichTextLinksElement,
 } from '../utils/helpers';
 import {
+    getChildCodenamesFromRichText,
+    getChildrenInfosFromRichText,
     processRichTextWithChildren,
     processRichTextWithOnlyCallouts,
 } from '../utils/richTextProcessing';
