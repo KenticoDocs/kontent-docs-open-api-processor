@@ -1,27 +1,13 @@
-const cheerio = require('cheerio');
-const htmlparser2 = require('htmlparser2');
-
-const parserOptions = {
-    decodeEntities: true,
-    lowerCaseAttributeNames: false,
-    lowerCaseTags: false,
-    recognizeSelfClosing: false,
-};
+const matchAll = require('match-all');
 
 export const resolveComponents = (obj: object, key: string): object => {
     if (key === 'description' && typeof obj[key] === 'string') {
-        const dom = htmlparser2.parseDOM(obj[key], parserOptions);
-        const $ = cheerio.load(dom);
-        let content = $.root().html().trim();
-        const regexOpeningTag = /<!--(Callout|CodeSample[s]?)([ a-zA-Z=0-9_#.]*)-->/g;
-        const regexClosingTag = /<!--(Callout-end|CodeSample[s]?-end)-->/g;
-        const regexCode = /```[a-z]*/g;
-        content = content.replace(regexOpeningTag, '<div class="$1"$2>');
-        content = content.replace(regexClosingTag, '</div>');
-        content = content.replace(regexCode, '');
-        content = resolveCallout(content);
-        content = resolveCodeSample(content);
+        let content = obj[key];
+
+        content = resolveCode(content);
+        content = resolveCallouts(content);
         content = resolveCodeSamples(content);
+        content = resolveCodeSamplesGroups(content);
 
         obj[key] = content;
     }
@@ -29,69 +15,61 @@ export const resolveComponents = (obj: object, key: string): object => {
     return obj;
 };
 
-const resolveCallout = (content: string): string => {
-    const dom = htmlparser2.parseDOM(content, parserOptions);
-    const $ = cheerio.load(dom);
-    const callouts = $('.Callout');
+const resolveCode = (content) => {
+    const regexCode = /```[a-z]*/g;
 
-    // tslint:disable-next-line:prefer-for-of
-    for (let i = 0; i < callouts.length; i++) {
-        const callout = $(callouts[i]);
-        callout.addClass(`callout--${callout.attr('type')}`);
-        callout.attr('class', callout.attr('class').toLowerCase());
-        callout.removeAttr('type');
-    }
-
-    return $.root().html().trim();
+    content = content.replace(regexCode, '');
+    return content;
 };
 
-const resolveCodeSample = (content: string): string => {
-    const dom = htmlparser2.parseDOM(content, parserOptions);
-    const $ = cheerio.load(dom);
-    const codeSamples = $('.CodeSample');
+const resolveCallouts = (content) => {
+    const regexOpeningTag = /<!--Callout type=([a-zA-Z0-9_#.]*)-->/g;
+    const regexClosingTag = /<!--Callout-end-->/g;
 
-    // tslint:disable-next-line:prefer-for-of
-    for (let i = 0; i < codeSamples.length; i++) {
-        const codeSample = $(codeSamples[i]);
-        const language = codeSample.attr('programminglanguage') || '';
-        const platform = codeSample.attr('platform') || language;
-        const codeSampleContent = codeSample.html();
-        codeSample.replaceWith(`<pre class="line-numbers" data-platform-code-original="${platform}" ` +
-            `data-platform-code="${platform.toLowerCase()}"><div class="infobar"><ul class="infobar__languages">` +
-            `<li class="infobar__lang">${language}</li></ul><div class="infobar__copy">` +
-            `</div></div><div class="clean-code">${codeSampleContent.trim()
-                .replace(/\n\n/g, '\n&nbsp;\n')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')}</div></pre>`);
-    }
+    content = content.replace(regexOpeningTag, (match, $1) => {
+        return `<div class="callout callout--${$1.toLowerCase()}">`;
+    });
+    content = content.replace(regexClosingTag, '</div>');
 
-    return $.root().html().trim();
+    return content;
 };
 
 const resolveCodeSamples = (content: string): string => {
-    const dom = htmlparser2.parseDOM(content, parserOptions);
-    const $ = cheerio.load(dom);
-    const codeSamples = $('.CodeSamples');
+    // tslint:disable-next-line: max-line-length
+    const regex = /<!--CodeSample programmingLanguage=([a-zA-Z0-9_#.]*) platform=([a-zA-Z0-9_#.]*)-->([\s\S]+?(?=<!--CodeSample-end-->))<!--CodeSample-end-->/g;
 
-    // tslint:disable-next-line:prefer-for-of
-    for (let i = 0; i < codeSamples.length; i++) {
-        const codeSampleGroup = $(codeSamples[i]);
-        codeSampleGroup.removeAttr('class');
-        codeSampleGroup.attr('class', 'code-samples');
-        codeSampleGroup.prepend('<ul class="language-selector__list"></ul>');
+    content = content.replace(regex, (match, $1, $2, $3) => {
+        const language = $1 || '';
+        const platform = $2 || language;
+        return `<pre class="line-numbers" data-platform-code-original="${platform}" ` +
+        `data-platform-code="${platform.toLowerCase()}"><div class="infobar"><ul class="infobar__languages">` +
+        `<li class="infobar__lang">${language}</li></ul><div class="infobar__copy">` +
+        `</div></div><div class="clean-code">${$3.trim()
+            .replace(/\n\n/g, '\n&nbsp;\n')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')}</div></pre>`;
+    });
 
-        const samples = codeSampleGroup.find('[data-platform-code-original]');
-        const langSelector = codeSampleGroup.find('.language-selector__list');
+    return content;
+};
+
+const resolveCodeSamplesGroups = (content: string): string => {
+    const regex = /<!--CodeSamples-->([\s\S]+?(?=<!--CodeSamples-end-->))<!--CodeSamples-end-->/g;
+
+    content = content.replace(regex, (match, $1) => {
+        // tslint:disable-next-line: max-line-length
+        const regexInner = /<pre class="line-numbers" data-platform-code-original="([a-zA-Z.]+?)" data-platform-code="([a-zA-Z.]+?)">/gi;
+        const platforms = matchAll($1, regexInner).toArray();
+        let selector = '';
 
         // tslint:disable-next-line:prefer-for-of
-        for (let j = 0; j < samples.length; j++) {
-            const sample = $(samples[j]);
-            const platformOriginal = sample.attr('data-platform-code-original');
-            const platform = sample.attr('data-platform-code');
-            langSelector.append(`<li class="language-selector__item"><a class="language-selector__link" ` +
-                `href="#" data-platform="${platform}">${platformOriginal.replace('_', '.')}</a></li>`);
+        for (let i = 0; i < platforms.length; i++) {
+            selector += `<li class="language-selector__item"><a class="language-selector__link" ` +
+            `href="#" data-platform="${platforms[i].toLowerCase()}">${platforms[i]}</a></li>`
         }
-    }
 
-    return $.root().html().trim();
+        return `<div class="code-samples"><ul class="language-selector__list">${selector}</ul>${$1}</div>`;
+    });
+
+    return content;
 };
