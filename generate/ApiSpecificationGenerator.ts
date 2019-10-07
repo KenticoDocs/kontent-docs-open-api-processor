@@ -75,7 +75,8 @@ export class ApiSpecificationGenerator {
     private readonly schemasComponents;
 
     private readonly processedSchemaObjects;
-    private recursiveSchemaCodenames;
+    private readonly schemaIdentifierMap;
+    private recursiveSchemaIdentifiers;
 
     constructor() {
         this.parametersComponents = {};
@@ -84,7 +85,8 @@ export class ApiSpecificationGenerator {
         this.schemasComponents = {};
 
         this.processedSchemaObjects = {};
-        this.recursiveSchemaCodenames = [];
+        this.schemaIdentifierMap = {};
+        this.recursiveSchemaIdentifiers = [];
     }
 
     public generateApiSpecification = (data: IPreprocessedData): OpenApiSpec => {
@@ -114,12 +116,13 @@ export class ApiSpecificationGenerator {
         const schemas = [];
         element.map((codename) => {
             const schemaData = getItemData<ISchemas>(codename, items);
-            const identifier = isNonEmptyTextOrRichTextLinksElement(schemaData.name)
+            const identifier = schemaData.id;
+            const schemaName = isNonEmptyTextOrRichTextLinksElement(schemaData.name)
                 ? schemaData.name
                 : codename;
 
-            this.schemasComponents[identifier] = getSchemaObject(schemaData, items);
-            const schemaReferenceObject = getReferenceObject('schemas', identifier);
+            this.schemasComponents[schemaName] = getSchemaObject(schemaData, items);
+            const schemaReferenceObject = getReferenceObject('schemas', schemaName);
             schemas.push(schemaReferenceObject);
             this.processedSchemaObjects[identifier] = schemaReferenceObject;
         });
@@ -135,22 +138,24 @@ export class ApiSpecificationGenerator {
             const schemaData = getItemData<ISchemas>(schemaInfo.codename, items);
 
             if (schemaData.contentType.includes('schema')) {
-                const identifier = isNonEmptyTextOrRichTextLinksElement(schemaData.name)
+                const identifier = schemaData.id;
+                const schemaName = isNonEmptyTextOrRichTextLinksElement(schemaData.name)
                     ? schemaData.name
                     : schemaInfo.codename;
+                this.schemaIdentifierMap[identifier] = schemaName;
 
                 if (!this.processedSchemaObjects[identifier]) {
                     this.processedSchemaObjects[identifier] = 'being processed';
 
                     if (schemaInfo.isItem) {
-                        const schemaReferenceObject = getReferenceObject('schemas', identifier);
+                        const schemaReferenceObject = getReferenceObject('schemas', schemaName);
                         schemas.push(schemaReferenceObject);
                         this.processedSchemaObjects[identifier] = schemaReferenceObject;
 
-                        this.schemasComponents[identifier] = getSchemaObject(schemaData, items);
+                        this.schemasComponents[schemaName] = getSchemaObject(schemaData, items);
                     } else {
                         const schemaObject = {};
-                        schemaObject[identifier] = getSchemaObject(schemaData, items);
+                        schemaObject[schemaName] = getSchemaObject(schemaData, items);
                         schemas.push(schemaObject);
 
                         this.processedSchemaObjects[identifier] = schemaObject;
@@ -158,9 +163,9 @@ export class ApiSpecificationGenerator {
                 } else {
                     if (this.processedSchemaObjects[identifier] === 'being processed') {
                         // The schema is still being processed - link only a reference to it
-                        this.recursiveSchemaCodenames.push(identifier);
+                        this.recursiveSchemaIdentifiers.push(identifier);
                         schemas.push({
-                            [identifier]: getReferenceObject('schemas', identifier),
+                            [schemaName]: getReferenceObject('schemas', schemaName),
                         });
                     } else {
                         schemas.push(this.processedSchemaObjects[identifier]);
@@ -373,7 +378,8 @@ export class ApiSpecificationGenerator {
             .reduce((accumulated, current) => Object.assign(accumulated, current), {});
 
     private resolveComponentsObject = (): ComponentsObject => {
-        this.recursiveSchemaCodenames.forEach((codename) => {
+        this.recursiveSchemaIdentifiers.forEach((identifier) => {
+            const codename = this.schemaIdentifierMap[identifier];
             this.schemasComponents[codename] = this.processedSchemaObjects[codename][codename];
         });
 

@@ -28,7 +28,9 @@ import {
     getNonEmptyStringAsObjectProperty,
     getNonEmptyStringProperty,
     getNumberProperty,
+    getNumberPropertyFromString,
     getSchemaProperty,
+    IObjectWithProperty,
 } from '../utils/getProperties';
 import {
     getItemData,
@@ -92,7 +94,7 @@ export const getSchemaObject = (schemaData: ISchemas, items: IPreprocessedItems)
 };
 
 const getSchemaAllOfObject = (schemaData: ISchemaAllOf, items: IPreprocessedItems): SchemaObject => ({
-    ...getSchemaCommonElements(schemaData, items, 'allOf'),
+    ...getSchemaCommonElements(schemaData, items, schemaData.contentType),
     ...getSchemaProperty(
         getApiSpecificationGenerator()
             .resolveSchemaObjectsInRichTextElement(schemaData.schemas, items), 'allOf',
@@ -109,7 +111,7 @@ const getSchemaAnyOfObject = (schemaData: ISchemaAnyOf, items: IPreprocessedItem
 });
 
 const getSchemaArrayObject = (schemaData: ISchemaArray, items: IPreprocessedItems): SchemaObject => ({
-    ...getSchemaCommonElements(schemaData, items),
+    ...getSchemaCommonElements(schemaData, items, schemaData.contentType),
     ...getSchemaProperty(
         getApiSpecificationGenerator()
             .resolveSchemaObjectsInRichTextElement(schemaData.items, items), 'items',
@@ -119,13 +121,13 @@ const getSchemaArrayObject = (schemaData: ISchemaArray, items: IPreprocessedItem
 });
 
 const getSchemaBooleanObject = (schemaData: ISchemaBoolean, items: IPreprocessedItems): SchemaObject => ({
-    ...getSchemaCommonElements(schemaData, items),
+    ...getSchemaCommonElements(schemaData, items, schemaData.contentType),
     ...getSchemaObjectPropertyElements(schemaData),
     type: 'boolean',
 });
 
 const getSchemaIntegerObject = (schemaData: ISchemaInteger, items: IPreprocessedItems): SchemaObject => ({
-    ...getSchemaCommonElements(schemaData, items),
+    ...getSchemaCommonElements(schemaData, items, schemaData.contentType),
     ...getSchemaObjectPropertyElements(schemaData),
     ...getArrayPropertyFromString(schemaData.acceptedValues, 'enum'),
     ...getMultipleChoiceProperty(schemaData.format, 'format'),
@@ -136,7 +138,7 @@ const getSchemaIntegerObject = (schemaData: ISchemaInteger, items: IPreprocessed
 });
 
 const getSchemaNumberObject = (schemaData: ISchemaNumber, items: IPreprocessedItems): SchemaObject => ({
-    ...getSchemaCommonElements(schemaData, items),
+    ...getSchemaCommonElements(schemaData, items, schemaData.contentType),
     ...getSchemaObjectPropertyElements(schemaData),
     ...getArrayPropertyFromString(schemaData.acceptedValues, 'enum'),
     ...getMultipleChoiceProperty(schemaData.format, 'format'),
@@ -159,7 +161,7 @@ const getSchemaObjectObject = (schemaData: ISchemaObject, items: IPreprocessedIt
     }
 
     return {
-        ...getSchemaCommonElements(schemaData, items, 'object'),
+        ...getSchemaCommonElements(schemaData, items, schemaData.contentType),
         ...getArrayPropertyFromString(schemaData.required, 'required'),
         ...getSchemaProperty(properties, 'properties'),
         ...getSchemaProperty(additionalProperties, 'additionalProperties'),
@@ -199,17 +201,33 @@ interface ISchemaObjectCommonElements {
 const getSchemaCommonElements = (
     schemaData: ISchemaElements,
     items: IPreprocessedItems,
-    contentType: string = '',
-): ISchemaObjectCommonElements => {
-    // Schema: Object and Schema: AllOf's example elements have to be saved as JSON objects
-    const example = (contentType === 'object' || contentType === 'allOf')
-        ? getNonEmptyStringAsObjectProperty(schemaData.example, 'example')
-        : getNonEmptyStringProperty(schemaData.example, 'example');
+    schemaType: string = '',
+): ISchemaObjectCommonElements => ({
+    ...getDescriptionProperty(schemaData.description, 'description', items),
+    ...getSchemaExample(schemaData.example, schemaType),
+});
 
-    return {
-        ...getDescriptionProperty(schemaData.description, 'description', items),
-        ...example,
-    };
+const getSchemaExample = (example: string, schemaType: string = ''): IObjectWithProperty | {} => {
+    switch (schemaType) {
+        case 'zapi_schema__object':
+        case 'zapi_schema__allof':
+        case 'zapi_schema__array': {
+            return getNonEmptyStringAsObjectProperty(example, 'example');
+        }
+
+        case 'zapi_schema__boolean': {
+            return getBooleanProperty([example], 'example');
+        }
+
+        case 'zapi_schema__integer':
+        case 'zapi_schema__number': {
+            return getNumberPropertyFromString(example, 'example');
+        }
+
+        default: {
+            return getNonEmptyStringProperty(example, 'example');
+        }
+    }
 };
 
 interface ISchemaObjectBooleanElements {

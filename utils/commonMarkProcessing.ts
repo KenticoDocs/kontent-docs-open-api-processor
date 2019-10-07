@@ -2,8 +2,8 @@ import {
     ICallout,
     ICodeSample,
     IPreprocessedItems,
-    ISchemaObject,
 } from 'cloud-docs-shared-code';
+import { ISchemas } from '../generate/getSchemaObjects';
 import {
     getItemData,
     getReferenceObject,
@@ -84,7 +84,7 @@ const insertChildrenIntoCommonMark = (content: string, items: IPreprocessedItems
         const codename = match[2];
         const childMarkToReplace = `<!--codename=${codename}-->`;
 
-        const childData = getItemData<ICodeSample | ICallout | ISchemaObject>(codename, items);
+        const childData = getItemData<ICodeSample | ICallout | ISchemas>(codename, items);
         switch (childData.contentType) {
             case 'callout': {
                 const calloutContent = (childData as ICallout).content
@@ -100,8 +100,13 @@ const insertChildrenIntoCommonMark = (content: string, items: IPreprocessedItems
                 break;
             }
 
-            case 'zapi_schema__object': {
-                const name = (childData as ISchemaObject).name;
+            case 'zapi_schema__object':
+            case 'zapi_schema__string':
+            case 'zapi_schema__number':
+            case 'zapi_schema__array':
+            case 'zapi_schema__integer':
+            case 'zapi_schema__boolean': {
+                const name = (childData as ISchemas).name;
                 const identifier = isNonEmptyTextOrRichTextLinksElement(name)
                     ? name
                     : codename;

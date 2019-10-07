@@ -26,7 +26,7 @@ export const getGenericProperty = <ElementType, ToInsert>(
             ? { [propertyName]: insertion(element) }
             : {};
 
-interface IObjectWithProperty {
+export interface IObjectWithProperty {
     [key: string]: string,
 }
 
@@ -76,6 +76,12 @@ export const getNumberProperty = (element: number, propertyName: string): IObjec
         (x) => x,
     )(element, propertyName);
 
+export const getNumberPropertyFromString = (element: string, propertyName: string): IObjectWithProperty | {} =>
+    getGenericProperty<string, number>(
+        isNonEmptyTextOrRichTextLinksElement,
+        (value) => parseInt(value, 10),
+    )(element, propertyName);
+
 export const getHeadersProperty = (element: HeadersObject, propertyName: string): IObjectWithProperty | {} =>
     getGenericProperty<HeadersObject, HeadersObject>(
         (headersObject) => Object.keys(headersObject).length > 0,
@@ -100,6 +106,11 @@ export const getSchemaProperty = (element: SchemaObject[], propertyName: string)
         return { [propertyName]: schemaObject };
     }
 
+    // SchemaObject's additionalProperties should not contain identifiers
+    if (propertyName === 'additionalProperties' && element.length > 1) {
+        return getAdditionalPropertiesProperty(propertyName, element);
+    }
+
     switch (Object.keys(element).length) {
         case 0: {
             return {};
@@ -118,6 +129,27 @@ export const getSchemaProperty = (element: SchemaObject[], propertyName: string)
             return { [propertyName]: getISchemasObject(element) };
         }
     }
+};
+
+const getAdditionalPropertiesProperty = (
+    propertyName: string,
+    element: SchemaObject[],
+): ISchemasObject | SchemaObject[] => {
+    const additionalPropertiesObject = {
+        [propertyName]: {},
+    };
+
+    element.forEach((item) => {
+        const itemKey = Object.keys(item)[0];
+        if (itemKey === 'x-additionalPropertiesName') {
+            additionalPropertiesObject[propertyName][itemKey] = item[itemKey];
+        } else {
+            const validKey = Object.keys(item[itemKey])[0];
+            additionalPropertiesObject[propertyName][validKey] = item[itemKey][validKey];
+        }
+    });
+
+    return additionalPropertiesObject;
 };
 
 const removeIdentifiersFromSchemasArray = (element: SchemaObject[]): SchemaObject[] => {
