@@ -16,11 +16,14 @@ import { storeReferenceDataToBlobStorage } from '../external/blobManager';
 import { initializeApiSpecificationGenerator } from '../generate/getApiSpecificationGenerator';
 import { renderReference } from '../redoc/renderReference';
 
+let apiSpecificationCodename;
+
 export const eventGridEvent: AzureFunction = async (
     context: Context,
     event: IBlobEventGridEvent,
 ): Promise<void> => {
     try {
+        apiSpecificationCodename = 'not yet processed';
         const container = getBlobContainerName(event);
         const isTest = container.includes('test');
 
@@ -31,6 +34,9 @@ export const eventGridEvent: AzureFunction = async (
             Configuration.keys.azureAccountName,
             Configuration.keys.azureStorageKey,
         );
+        apiSpecificationCodename = blob
+            ? blob.zapiSpecificationCodename
+            : undefined;
 
         // API Specification has been deleted - Do not generate a new blob
         if (blob.operation === ReferenceOperation.Delete) {
@@ -76,6 +82,7 @@ export const eventGridEvent: AzureFunction = async (
         };
     } catch (error) {
         /** This try-catch is required for correct logging of exceptions in Azure */
-        throw `Message: ${error.message} \nStack Trace: ${error.stack}`;
+        throw `An error occurred while processing API Reference Specification with codename ${apiSpecificationCodename}`
+        + ` \nMessage: ${error.message} \nStack Trace: ${error.stack}`;
     }
 };
