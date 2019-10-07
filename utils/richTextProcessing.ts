@@ -3,8 +3,8 @@ import {
     ICodeSample,
     ICodeSamples,
     IPreprocessedItems,
-    ISchemaObject,
 } from 'cloud-docs-shared-code/reference/preprocessedModels';
+import { ISchemas } from '../generate/getSchemaObjects';
 import { convertToCommonMark } from './commonMarkProcessing';
 import { getItemData } from './helpers';
 
@@ -71,7 +71,7 @@ export const labelChildren = <AllowedChildren>(labelFunction: LabelFunction<Allo
     };
 
 export const labelAllChildItems = (
-    item: ICallout | ICodeSamples | ICodeSample | ISchemaObject,
+    item: ICallout | ICodeSamples | ICodeSample | ISchemas,
     content: string,
     childElementData: IChildElementData,
     items: IPreprocessedItems,
@@ -95,7 +95,12 @@ export const labelAllChildItems = (
             return content.replace(childElementData.element, labelledContent);
         }
 
-        case 'zapi_schema__object': {
+        case 'zapi_schema__object':
+        case 'zapi_schema__string':
+        case 'zapi_schema__number':
+        case 'zapi_schema__array':
+        case 'zapi_schema__integer':
+        case 'zapi_schema__boolean': {
             const schemaMark = getCodenameMark(item.codename);
 
             return content.replace(childElementData.element, schemaMark);
