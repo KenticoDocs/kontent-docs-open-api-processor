@@ -29,11 +29,11 @@ export const getHtml = async (templatePath: string, specification: object, optio
         title: 'ReDoc documentation',
     };
 
-    const pageHTML = await getPageHtml(specification, config);
+    let pageHTML = await getPageHtml(specification, config);
     const sizeInKiB = Math.ceil(Buffer.byteLength(pageHTML) / 1024);
     const time = Date.now() - start;
     consola.log(`\n🎉 bundled successfully: (${sizeInKiB} KiB) [⏱ ${time / 1000}s]`);
-
+    pageHTML = pageHTML.replace('//# sourceMappingURL=redoc.standalone.js.map', '');
     return pageHTML;
 };
 
