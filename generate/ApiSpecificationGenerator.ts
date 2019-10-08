@@ -51,6 +51,7 @@ import {
 import {
     getChildCodenamesFromRichText,
     getChildrenInfosFromRichText,
+    IRichTextChildInfo,
     processRichTextWithChildren,
     processRichTextWithOnlyCallouts,
 } from '../utils/richTextProcessing';
@@ -138,43 +139,52 @@ export class ApiSpecificationGenerator {
             const schemaData = getItemData<ISchemas>(schemaInfo.codename, items);
 
             if (schemaData.contentType.includes('schema')) {
-                const identifier = schemaData.id;
-                const schemaName = isNonEmptyTextOrRichTextLinksElement(schemaData.name)
-                    ? schemaData.name
-                    : schemaInfo.codename;
-                this.schemaIdentifierMap[identifier] = schemaName;
-
-                if (!this.processedSchemaObjects[identifier]) {
-                    this.processedSchemaObjects[identifier] = 'being processed';
-
-                    if (schemaInfo.isItem) {
-                        const schemaReferenceObject = getReferenceObject('schemas', schemaName);
-                        schemas.push(schemaReferenceObject);
-                        this.processedSchemaObjects[identifier] = schemaReferenceObject;
-
-                        this.schemasComponents[schemaName] = getSchemaObject(schemaData, items);
-                    } else {
-                        const schemaObject = {};
-                        schemaObject[schemaName] = getSchemaObject(schemaData, items);
-                        schemas.push(schemaObject);
-
-                        this.processedSchemaObjects[identifier] = schemaObject;
-                    }
-                } else {
-                    if (this.processedSchemaObjects[identifier] === 'being processed') {
-                        // The schema is still being processed - link only a reference to it
-                        this.recursiveSchemaIdentifiers.push(identifier);
-                        schemas.push({
-                            [schemaName]: getReferenceObject('schemas', schemaName),
-                        });
-                    } else {
-                        schemas.push(this.processedSchemaObjects[identifier]);
-                    }
-                }
+                this.resolveSingleSchema(schemaData, schemaInfo, schemas, items);
             }
         });
 
         return schemas;
+    };
+
+    private resolveSingleSchema = (
+        schemaData: ISchemas,
+        schemaInfo: IRichTextChildInfo,
+        schemas: SchemaObject[],
+        items: IPreprocessedItems,
+    ): void => {
+        const identifier = schemaData.id;
+        const schemaName = isNonEmptyTextOrRichTextLinksElement(schemaData.name)
+            ? schemaData.name
+            : schemaInfo.codename;
+        this.schemaIdentifierMap[identifier] = schemaName;
+
+        if (!this.processedSchemaObjects[identifier]) {
+            this.processedSchemaObjects[identifier] = 'being processed';
+
+            if (schemaInfo.isItem) {
+                const schemaReferenceObject = getReferenceObject('schemas', schemaName);
+                schemas.push(schemaReferenceObject);
+                this.processedSchemaObjects[identifier] = schemaReferenceObject;
+
+                this.schemasComponents[schemaName] = getSchemaObject(schemaData, items);
+            } else {
+                const schemaObject = {};
+                schemaObject[schemaName] = getSchemaObject(schemaData, items);
+                schemas.push(schemaObject);
+
+                this.processedSchemaObjects[identifier] = schemaObject;
+            }
+        } else {
+            if (this.processedSchemaObjects[identifier] === 'being processed') {
+                // The schema is still being processed - link only a reference to it
+                this.recursiveSchemaIdentifiers.push(identifier);
+                schemas.push({
+                    [schemaName]: getReferenceObject('schemas', schemaName),
+                });
+            } else {
+                schemas.push(this.processedSchemaObjects[identifier]);
+            }
+        }
     };
 
     private resolveInfoObject = (apiSpecification: IZapiSpecification, items: IPreprocessedItems): InfoObject => {
@@ -496,8 +506,8 @@ export class ApiSpecificationGenerator {
                 const codeSampleObject = getItemData<ICodeSample>(codename, items);
 
                 return {
-                    lang: (codeSampleObject.programmingLanguage.length === 1)
-                        ? codeSampleObject.programmingLanguage[0]
+                    lang: (codeSampleObject.platform.length === 1)
+                        ? codeSampleObject.platform[0]
                         : 'not_specified',
                     source: codeSampleObject.code,
                 };

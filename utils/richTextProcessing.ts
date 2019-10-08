@@ -15,7 +15,7 @@ interface IChildElementData {
     readonly element: string;
 }
 
-interface IRichTextChildInfo {
+export interface IRichTextChildInfo {
     readonly isItem: boolean,
     readonly codename: string,
 }

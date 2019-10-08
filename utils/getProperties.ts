@@ -4,6 +4,7 @@ import {
     SchemaObject,
 } from '@loopback/openapi-v3-types';
 import { IPreprocessedItems } from 'cloud-docs-shared-code';
+import { sendNotification } from '../external/sendNotification';
 import {
     ISchemasObject,
     resolveDiscriminatorObject,
@@ -33,7 +34,13 @@ export interface IObjectWithProperty {
 export const getNonEmptyStringAsObjectProperty = (element: string, propertyName: string): IObjectWithProperty | {} =>
     getGenericProperty<string, object>(
         isNonEmptyDescriptionElement,
-        (value) => JSON.parse(value),
+        (value) => {
+            try {
+                return JSON.parse(value);
+            } catch (exception) {
+                sendNotification('', `Invalid JSON object in ${propertyName} element: ${value}`);
+            }
+        },
     )(element, propertyName);
 
 export const getNonEmptyStringProperty = (element: string, propertyName: string): IObjectWithProperty | {} =>
@@ -142,8 +149,13 @@ const getAdditionalPropertiesProperty = (
     element.forEach((item) => {
         const itemKey = Object.keys(item)[0];
         if (itemKey === 'x-additionalPropertiesName') {
+            // preserve nesting
+            additionalPropertiesObject[propertyName][itemKey] = item[itemKey];
+        } else if (itemKey === '$ref') {
+            // preserve nesting
             additionalPropertiesObject[propertyName][itemKey] = item[itemKey];
         } else {
+            // reduce nesting - omit itemKey
             const validKey = Object.keys(item[itemKey])[0];
             additionalPropertiesObject[propertyName][validKey] = item[itemKey][validKey];
         }

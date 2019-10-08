@@ -87,9 +87,7 @@ const insertChildrenIntoCommonMark = (content: string, items: IPreprocessedItems
         const childData = getItemData<ICodeSample | ICallout | ISchemas>(codename, items);
         switch (childData.contentType) {
             case 'callout': {
-                const calloutContent = (childData as ICallout).content
-                    .replace(/({~)/g, '<code>')
-                    .replace(/(~})/g, '<\/code>');
+                const calloutContent = getCalloutContent(childData as ICallout);
                 resolvedContent = resolvedContent.replace(childMarkToReplace, calloutContent);
                 break;
             }
@@ -106,15 +104,7 @@ const insertChildrenIntoCommonMark = (content: string, items: IPreprocessedItems
             case 'zapi_schema__array':
             case 'zapi_schema__integer':
             case 'zapi_schema__boolean': {
-                const name = (childData as ISchemas).name;
-                const identifier = isNonEmptyTextOrRichTextLinksElement(name)
-                    ? name
-                    : codename;
-                const schemaReference = getReferenceObject('schemas', identifier).$ref;
-                const schemaDefinition = `<SchemaDefinition schemaRef="${schemaReference}" ` +
-                    'showReadOnly={true} showWriteOnly={true} ' +
-                    `\/> `;
-
+                const schemaDefinition = getSchemaDefinition(childData as ISchemas, codename);
                 resolvedContent = resolvedContent.replace(childMarkToReplace, schemaDefinition);
                 break;
             }
@@ -128,6 +118,30 @@ const insertChildrenIntoCommonMark = (content: string, items: IPreprocessedItems
     }
 
     return resolvedContent;
+};
+
+const getCalloutContent = (childData: ICallout): string =>
+    childData.content
+        .replace(/({~)/g, '<code>')
+        .replace(/(~})/g, '<\/code>');
+
+const getCodeBlock = (codeSampleData: ICodeSample): string => {
+    const code = codeSampleData.code;
+    const syntaxHighlighter = getSyntaxHighlighter(codeSampleData.programmingLanguage);
+
+    return `\n\`\`\`${syntaxHighlighter}\n${code}\n\`\`\``;
+};
+
+const getSchemaDefinition = (childData: ISchemas, codename: string): string => {
+    const name = (childData as ISchemas).name;
+    const identifier = isNonEmptyTextOrRichTextLinksElement(name)
+        ? name
+        : codename;
+    const schemaReference = getReferenceObject('schemas', identifier).$ref;
+
+    return `<SchemaDefinition schemaRef="${schemaReference}" ` +
+        'showReadOnly={true} showWriteOnly={true} ' +
+        `\/> `;
 };
 
 const resolveCodeTagsInTables = (content: string): string => {
@@ -147,13 +161,6 @@ const resolveCodeTagsInTables = (content: string): string => {
     }
 
     return resolvedContent;
-};
-
-const getCodeBlock = (codeSampleData: ICodeSample): string => {
-    const code = codeSampleData.code;
-    const syntaxHighlighter = getSyntaxHighlighter(codeSampleData.programmingLanguage);
-
-    return `\n\`\`\`${syntaxHighlighter}\n${code}\n\`\`\``;
 };
 
 const getSyntaxHighlighter = (programmingLanguages: string[]): string => {
