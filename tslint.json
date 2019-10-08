@@ -1,0 +1,24 @@
+{
+	"defaultSeverity": "error",
+	"extends": [
+		"tslint:recommended"
+	],
+	"linterOptions": {
+		"include": [
+			"./kcd-notifier/*.ts"
+		]
+	},
+	"jsRules": {},
+	"rules": {
+		"no-var-requires": false,
+		"no-string-throw": false,
+		"quotemark": [
+			true,
+			"single"
+		],
+		"semicolon": [
+			false
+		]
+	},
+	"rulesDirectory": []
+}
