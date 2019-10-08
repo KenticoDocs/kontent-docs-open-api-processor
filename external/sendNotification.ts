@@ -9,7 +9,7 @@ import {
 
 export const sendNotification = async (
     specificationCodename: string,
-    validationResult: OpenAPISchemaValidatorResult,
+    validationResult: OpenAPISchemaValidatorResult | string,
 ): Promise<void> => {
     const NotifierEndpoint: string = process.env['EventGrid.Notification.Endpoint'] || '';
     const EventGridKey: string = process.env['EventGrid.Notification.Key'] || '';
