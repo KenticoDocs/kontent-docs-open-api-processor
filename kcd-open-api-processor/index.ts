@@ -2,6 +2,7 @@ import {
     AzureFunction,
     Context,
 } from '@azure/functions';
+import { OpenApiSpec } from '@loopback/openapi-v3-types';
 import {
     Configuration,
     getBlobContainerName,
@@ -13,6 +14,7 @@ import { IPreprocessedData } from 'cloud-docs-shared-code/reference/preprocessed
 import OpenAPISchemaValidator from 'openapi-schema-validator';
 import { OpenAPIV3 } from 'openapi-types';
 import { storeReferenceDataToBlobStorage } from '../external/blobManager';
+import { sendNotification } from '../external/sendNotification';
 import { initializeApiSpecificationGenerator } from '../generate/getApiSpecificationGenerator';
 import { renderReference } from '../redoc/renderReference';
 
@@ -46,35 +48,16 @@ export const eventGridEvent: AzureFunction = async (
         const apiSpecificationGenerator = initializeApiSpecificationGenerator();
         const specification = apiSpecificationGenerator.generateApiSpecification(blob);
 
-        const validator = new OpenAPISchemaValidator({
-            version: 3,
-        });
-
-        const validationResults = validator.validate(specification as OpenAPIV3.Document);
-
-        // TODO napoj na notifiera - nemoze zastavit generovanie HTML
-        // if (validationResults.errors.length > 0) {
-        //     context.log.error(validationResults.errors);
-        //
-        //     context.res = {
-        //         body: validationResults.errors,
-        //     };
-        //     return;
-        // }
-
-        // const yaml = YAML
-        //     .stringify(specification, 12, 2)
-        //     // Formats array of objects nicely, see https://github.com/jeremyfa/yaml.js/issues/117
-        //     .replace(/(\s+\-)\s*\n\s+/g, '$1 ');
+        await validateApiSpecification(specification);
 
         const stringSpec = JSON.stringify(specification);
-
         // TODO Remove this before merge to master
         await storeReferenceDataToBlobStorage(
             stringSpec,
             `TEMPORARY-${blob.zapiSpecificationCodename}`,
             blob.operation,
         );
+
         await renderReference(specification, blob);
 
         context.res = {
@@ -84,5 +67,17 @@ export const eventGridEvent: AzureFunction = async (
         /** This try-catch is required for correct logging of exceptions in Azure */
         throw `An error occurred while processing API Reference Specification with codename ${apiSpecificationCodename}`
         + ` \nMessage: ${error.message} \nStack Trace: ${error.stack}`;
+    }
+};
+
+const validateApiSpecification = async (specification: OpenApiSpec): Promise<void> => {
+    const validator = new OpenAPISchemaValidator({
+        version: 3,
+    });
+
+    const validationResults = validator.validate(specification as OpenAPIV3.Document);
+
+    if (validationResults.errors.length > 0) {
+        await sendNotification(apiSpecificationCodename, validationResults);
     }
 };

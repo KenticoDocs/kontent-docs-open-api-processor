@@ -142,8 +142,13 @@ const getAdditionalPropertiesProperty = (
     element.forEach((item) => {
         const itemKey = Object.keys(item)[0];
         if (itemKey === 'x-additionalPropertiesName') {
+            // preserve nesting
+            additionalPropertiesObject[propertyName][itemKey] = item[itemKey];
+        } else if (itemKey === '$ref') {
+            // preserve nesting
             additionalPropertiesObject[propertyName][itemKey] = item[itemKey];
         } else {
+            // reduce nesting - omit itemKey
             const validKey = Object.keys(item[itemKey])[0];
             additionalPropertiesObject[propertyName][validKey] = item[itemKey][validKey];
         }
