@@ -29,11 +29,12 @@ export const getHtml = async (templatePath: string, specification: object, optio
         title: 'ReDoc documentation',
     };
 
-    const pageHTML = await getPageHtml(specification, config);
+    let pageHTML = await getPageHtml(specification, config);
     const sizeInKiB = Math.ceil(Buffer.byteLength(pageHTML) / 1024);
     const time = Date.now() - start;
     consola.log(`\n🎉 bundled successfully: (${sizeInKiB} KiB) [⏱ ${time / 1000}s]`);
-
+    pageHTML = pageHTML.replace('//# sourceMappingURL=redoc.standalone.js.map', '');
+    // pageHTML = unescapeMultipleSlash(pageHTML);
     return pageHTML;
 };
 
@@ -92,3 +93,9 @@ const escapeClosingScriptTag = (str: string): string =>
 // see http://www.thespanner.co.uk/2011/07/25/the-json-specification-is-now-wrong/
 const escapeUnicode = (str: string): string =>
     str.replace(/\u2028|\u2029/g, (m) => '\\u202' + (m === '\u2028' ? '8' : '9'));
+
+/*const unescapeMultipleSlash = (str: string): string => {
+    str = str.replace(/\\\\\\&quot;/g, '&quot;');
+    str = str.replace(/\\\\n/g, '\n');
+    return str;
+};*/

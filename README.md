@@ -35,7 +35,8 @@ It responds to events triggered by the blob storage, after the [Reference Prepro
 #### Required Keys
 * `Azure.StorageKey` - Azure Storage key
 * `Azure.StorageAccountName` - Azure Storage account name
-* `Azure.ContainerName` - Azure Storage container name
+* `Azure.ContainerName` - Azure Storage container name - for HTML API Reference pages
+* `Azure.SpecificationContainerName` - Azure Storage container name - for JSON API Reference specifications
 * `EventGrid.Notification.Key` - Key for notification eventGrid topic
 * `EventGrid.Notification.Endpoint` - Url for notification eventGrid topic
 
