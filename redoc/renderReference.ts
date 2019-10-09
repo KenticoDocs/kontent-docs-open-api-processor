@@ -1,6 +1,12 @@
 import { OpenApiSpec } from '@loopback/openapi-v3-types';
-import { IPreprocessedData } from 'cloud-docs-shared-code';
-import { storeReferenceDataToBlobStorage } from '../external/blobManager';
+import {
+    Configuration,
+    IPreprocessedData,
+} from 'cloud-docs-shared-code';
+import {
+    getBlobName,
+    storeReferenceDataToBlobStorage,
+} from '../external/blobManager';
 import { getHtml } from './redoc-cli';
 import { prerenderOptions } from './redoc-cli/prerenderOptions';
 import { resolveComponents } from './resolveComponents';
@@ -11,7 +17,8 @@ export const renderReference = async (specification: OpenApiSpec, blob: IPreproc
     const traversedSpecification = traverseObject(specification, resolveComponents);
 
     const html = await getHtml(template, traversedSpecification, prerenderOptions);
-    await storeReferenceDataToBlobStorage(html, blob.zapiSpecificationCodename, blob.operation);
+    const blobName = getBlobName(blob.zapiSpecificationCodename, 'html', blob.operation);
+    await storeReferenceDataToBlobStorage(html, blobName, Configuration.keys.azureContainerName);
 };
 
 const traverseObject = (

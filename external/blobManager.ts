@@ -6,11 +6,10 @@ const BlobStorage = require('@azure/storage-blob');
 
 export const storeReferenceDataToBlobStorage = async (
     dataBlob: string,
-    codename: string,
-    operation: ReferenceOperation,
+    blobName: string,
+    containerName: string,
 ): Promise<void> => {
-    const containerUrl = getContainerUrl();
-    const blobName = getBlobName(codename, operation);
+    const containerUrl = getContainerUrl(containerName);
     const blobURL = BlobStorage.BlockBlobURL.fromContainerURL(containerUrl, blobName);
 
     await blobURL.upload(
@@ -20,7 +19,7 @@ export const storeReferenceDataToBlobStorage = async (
     );
 };
 
-const getContainerUrl = (): ContainerURL => {
+const getContainerUrl = (containerName: string): ContainerURL => {
     const sharedKeyCredential = new BlobStorage.SharedKeyCredential(
         Configuration.keys.azureAccountName,
         Configuration.keys.azureStorageKey,
@@ -31,20 +30,17 @@ const getContainerUrl = (): ContainerURL => {
         pipeline,
     );
 
-    return BlobStorage.ContainerURL.fromServiceURL(serviceUrl, Configuration.keys.azureContainerName);
+    return BlobStorage.ContainerURL.fromServiceURL(serviceUrl, containerName);
 };
 
-export const getBlobName = (codename: string, operation: ReferenceOperation): string => {
+export const getBlobName = (codename: string, ending: string, operation: ReferenceOperation): string => {
     switch (operation) {
         case ReferenceOperation.Update:
         case ReferenceOperation.Initialize: {
-            return `${codename}.html`;
+            return `${codename}.${ending}`;
         }
-        // TODO Remove before merge to master
         case ReferenceOperation.Preview: {
-            return codename.includes('TEMP')
-                ? `${codename}-preview.json`
-                : `${codename}-preview.html`;
+            return `${codename}-preview.${ending}`;
         }
         default: {
             throw Error('Invalid operation');

@@ -13,7 +13,10 @@ import {
 import { IPreprocessedData } from 'cloud-docs-shared-code/reference/preprocessedModels';
 import OpenAPISchemaValidator from 'openapi-schema-validator';
 import { OpenAPIV3 } from 'openapi-types';
-import { storeReferenceDataToBlobStorage } from '../external/blobManager';
+import {
+    getBlobName,
+    storeReferenceDataToBlobStorage,
+} from '../external/blobManager';
 import { sendNotification } from '../external/sendNotification';
 import { initializeApiSpecificationGenerator } from '../generate/getApiSpecificationGenerator';
 import { renderReference } from '../redoc/renderReference';
@@ -50,13 +53,7 @@ export const eventGridEvent: AzureFunction = async (
 
         await validateApiSpecification(specification);
 
-        const stringSpec = JSON.stringify(specification);
-        // TODO Remove this before merge to master
-        await storeReferenceDataToBlobStorage(
-            stringSpec,
-            `TEMPORARY-${blob.zapiSpecificationCodename}`,
-            blob.operation,
-        );
+        const stringSpec = await storeApiSpecificationToBlob(specification, blob);
 
         await renderReference(specification, blob);
 
@@ -80,4 +77,18 @@ const validateApiSpecification = async (specification: OpenApiSpec): Promise<voi
     if (validationResults.errors.length > 0) {
         await sendNotification(apiSpecificationCodename, validationResults);
     }
+};
+
+const storeApiSpecificationToBlob = async (specification: OpenApiSpec, blob: IPreprocessedData): Promise<string> => {
+    const specificationContainer = process.env['Azure.SpecificationContainerName'] || '';
+    const stringSpec = JSON.stringify(specification);
+
+    const blobName = getBlobName(blob.zapiSpecificationCodename, 'json', blob.operation);
+    await storeReferenceDataToBlobStorage(
+        stringSpec,
+        blobName,
+        specificationContainer,
+    );
+
+    return stringSpec;
 };
