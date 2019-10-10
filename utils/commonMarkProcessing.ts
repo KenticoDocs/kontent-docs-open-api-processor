@@ -14,7 +14,7 @@ const html2commonmark = require('html2commonmark');
 
 // <h1> heading gets translated in commonMark to ===, which has to be replaced with #
 export const fixPrimaryHeadings = (content: string): string => {
-    const mainHeadingExtractor = new RegExp('([A-Za-z0-9_ .]*)\\n===\\n', 'g');
+    const mainHeadingExtractor = new RegExp('([A-Za-z0-9_ .;&]*)\\n===\\n', 'g');
     let match = mainHeadingExtractor.exec(content);
 
     let resolvedContent = content;
@@ -61,7 +61,7 @@ export const resolveChildrenAndCodeBlocks = (content: string, items: IPreprocess
 
 // <h2> heading gets translated in commonMark to ---, which has to be replaced with ##
 const fixSecondaryHeading = (content: string): string => {
-    const mainHeadingExtractor = new RegExp('(|\\n)([A-Za-z0-9_ ]*)\\n---\\n', 'g');
+    const mainHeadingExtractor = new RegExp('(|\\n)([A-Za-z0-9_ .;&]*)\\n---\\n', 'g');
     let match = mainHeadingExtractor.exec(content);
 
     let resolvedContent = content;
