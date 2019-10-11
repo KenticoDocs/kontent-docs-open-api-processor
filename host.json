@@ -1,6 +1,12 @@
 {
   "version": "2.0",
   "functionTimeout": "00:10:00",
+  "extensions": {
+    "queues": {
+      "batchSize": 1,
+      "newBatchThreshold": 0
+    }
+  },
   "extensionBundle": {
         "id": "Microsoft.Azure.Functions.ExtensionBundle",
         "version": "[1.*, 2.0.0)"
