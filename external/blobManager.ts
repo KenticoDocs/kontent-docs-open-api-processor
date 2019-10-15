@@ -1,6 +1,6 @@
 import { ContainerURL } from '@azure/storage-blob';
-import { Configuration } from 'cloud-docs-shared-code';
-import { ReferenceOperation } from 'cloud-docs-shared-code/reference/preprocessedModels';
+import { Configuration } from 'kontent-docs-shared-code';
+import { Operation } from 'kontent-docs-shared-code/reference/preprocessedModels';
 
 const BlobStorage = require('@azure/storage-blob');
 
@@ -33,13 +33,13 @@ const getContainerUrl = (containerName: string): ContainerURL => {
     return BlobStorage.ContainerURL.fromServiceURL(serviceUrl, containerName);
 };
 
-export const getBlobName = (codename: string, ending: string, operation: ReferenceOperation): string => {
+export const getBlobName = (codename: string, ending: string, operation: Operation): string => {
     switch (operation) {
-        case ReferenceOperation.Update:
-        case ReferenceOperation.Initialize: {
+        case Operation.Update:
+        case Operation.Initialize: {
             return `${codename}.${ending}`;
         }
-        case ReferenceOperation.Preview: {
+        case Operation.Preview: {
             return `${codename}-preview.${ending}`;
         }
         default: {

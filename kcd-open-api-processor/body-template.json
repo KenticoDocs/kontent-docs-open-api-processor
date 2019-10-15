@@ -1,0 +1,25 @@
+{
+  "input": {
+    "topic": "<topic>",
+    "subject": "<subject>",
+    "eventType": "Microsoft.Storage.BlobCreated",
+    "eventTime": "2017-06-26T18:41:00.9584103Z",
+    "id": "<GUID>",
+    "data": {
+      "api": "PutBlockList",
+      "clientRequestId": "<client_request_id>",
+      "requestId": "<request_id>",
+      "eTag": "<tag>",
+      "contentType": "text/plain",
+      "contentLength": "<length>",
+      "blobType": "BlockBlob",
+      "url": "<url_of_blob_with records>",
+      "sequencer": "00000000000004420000000000028963",
+      "storageDiagnostics": {
+        "batchId": "<batch_id>"
+      }
+    },
+    "dataVersion": "2",
+    "metadataVersion": "1"
+  }
+}

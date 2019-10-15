@@ -32,7 +32,7 @@ import {
     ISecurityScheme,
     IServer,
     IZapiSpecification,
-} from 'cloud-docs-shared-code/reference/preprocessedModels';
+} from 'kontent-docs-shared-code/reference/preprocessedModels';
 import { fixPrimaryHeadings } from '../utils/commonMarkProcessing';
 import {
     getBooleanProperty,

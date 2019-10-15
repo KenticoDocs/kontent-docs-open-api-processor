@@ -3,7 +3,7 @@ import {
     ICodeSample,
     ICodeSamples,
     IPreprocessedItems,
-} from 'cloud-docs-shared-code/reference/preprocessedModels';
+} from 'kontent-docs-shared-code/reference/preprocessedModels';
 import { ISchemas } from '../generate/getSchemaObjects';
 import { convertToCommonMark } from './commonMarkProcessing';
 import { getItemData } from './helpers';

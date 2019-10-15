@@ -2,7 +2,7 @@ import { OpenApiSpec } from '@loopback/openapi-v3-types';
 import {
     Configuration,
     IPreprocessedData,
-} from 'cloud-docs-shared-code';
+} from 'kontent-docs-shared-code';
 import {
     getBlobName,
     storeReferenceDataToBlobStorage,

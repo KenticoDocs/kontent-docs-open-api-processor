@@ -4,9 +4,9 @@ const fs = require('fs');
 const server = require('react-dom/server');
 const React = require('react');
 const consola = require('consola');
-const redoc = require('kentico-cloud-docs-redoc');
+const redoc = require('kentico-kontent-docs-redoc');
 const path = require('path');
-const BUNDLES_DIR = path.dirname(require.resolve('kentico-cloud-docs-redoc'));
+const BUNDLES_DIR = path.dirname(require.resolve('kentico-kontent-docs-redoc'));
 
 interface IRedocConfig {
     readonly cdn: boolean,

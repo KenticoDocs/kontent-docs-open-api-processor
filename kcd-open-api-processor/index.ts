@@ -8,9 +8,9 @@ import {
     getBlobContainerName,
     getBlobFromStorage,
     IBlobEventGridEvent,
-    ReferenceOperation,
-} from 'cloud-docs-shared-code';
-import { IPreprocessedData } from 'cloud-docs-shared-code/reference/preprocessedModels';
+    Operation,
+} from 'kontent-docs-shared-code';
+import { IPreprocessedData } from 'kontent-docs-shared-code/reference/preprocessedModels';
 import OpenAPISchemaValidator from 'openapi-schema-validator';
 import { OpenAPIV3 } from 'openapi-types';
 import {
@@ -44,7 +44,7 @@ export const eventGridEvent: AzureFunction = async (
             : undefined;
 
         // API Specification has been deleted - Do not generate a new blob
-        if (blob.operation === ReferenceOperation.Delete) {
+        if (blob.operation === Operation.Delete) {
             return;
         }
 
