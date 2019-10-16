@@ -18,7 +18,7 @@ import {
     ISchemaObjectPropertyElements,
     ISchemaOneOf,
     ISchemaString,
-} from 'cloud-docs-shared-code';
+} from 'kontent-docs-shared-code';
 import {
     getArrayPropertyFromString,
     getBooleanProperty,

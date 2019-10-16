@@ -1,4 +1,4 @@
-import { ICallout } from 'cloud-docs-shared-code';
+import { ICallout } from 'kontent-docs-shared-code';
 import {
     CalloutMarkEnd,
     CodeSampleMarkEnd,

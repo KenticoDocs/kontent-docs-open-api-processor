@@ -1,20 +1,20 @@
-| [master](https://github.com/KenticoDocs/cloud-docs-open-api-processor/tree/master) | [develop](https://github.com/KenticoDocs/cloud-docs-open-api-processor/tree/develop) |
+| [master](https://github.com/KenticoDocs/kontent-docs-open-api-processor/tree/master) | [develop](https://github.com/KenticoDocs/kontent-docs-open-api-processor/tree/develop) |
 |:---:|:---:|
-| [![Build Status](https://travis-ci.com/KenticoDocs/cloud-docs-open-api-processor.svg?branch=master)](https://travis-ci.com/KenticoDocs/cloud-docs-open-api-processor/branches) [![codebeat badge](https://codebeat.co/badges/61fcce53-5a36-4770-8b4f-b0a6ccbfd059)](https://codebeat.co/projects/github-com-kenticodocs-cloud-docs-open-api-processor-master) | [![Build Status](https://travis-ci.com/KenticoDocs/cloud-docs-open-api-processor.svg?branch=develop)](https://travis-ci.com/KenticoDocs/cloud-docs-open-api-processor/branches) [![codebeat badge](https://codebeat.co/badges/81dfc1ab-c324-4478-9908-f4d0eacca3ce)](https://codebeat.co/projects/github-com-kenticodocs-cloud-docs-open-api-processor-develop) |
+| [![Build Status](https://travis-ci.com/KenticoDocs/kontent-docs-open-api-processor.svg?branch=master)](https://travis-ci.com/KenticoDocs/kontent-docs-open-api-processor/branches) [![codebeat badge](https://codebeat.co/badges/920ab1a9-ce15-41bd-aa7b-3ec575e9fd7b)](https://codebeat.co/projects/github-com-kenticodocs-kontent-docs-open-api-processor-master) | [![Build Status](https://travis-ci.com/KenticoDocs/kontent-docs-open-api-processor.svg?branch=develop)](https://travis-ci.com/KenticoDocs/kontent-docs-open-api-processor/branches) [![codebeat badge](https://codebeat.co/badges/9ac54137-9469-497d-a8dd-3a7ecea2c201)](https://codebeat.co/projects/github-com-kenticodocs-kontent-docs-open-api-processor-develop) |
 
 # Kentico Kontent Documentation - OpenAPI Processor
 
 Backend function for Kentico Kontent documentation portal, which utilizes [Kentico Kontent](https://kontent.ai/) as a source of its data.
 
 This service is responsible for creating HTML documents that represent API reference pages on the [documentation portal](https://docs.kontent.ai/), and passing them forward using [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/).
-It responds to events triggered by the blob storage, after the [Reference Preprocessor](https://github.com/KenticoDocs/cloud-docs-reference-preprocessor) creates a blob with the preprocessed data. The OpenAPI Processor then processes the data into HTML pages that are then saved in the Blob Storage.
+It responds to events triggered by the blob storage, after the [Reference Preprocessor](https://github.com/KenticoDocs/kontent-docs-reference-preprocessor) creates a blob with the preprocessed data. The OpenAPI Processor then processes the data into HTML pages that are then saved in the Blob Storage.
 
 ## Overview
 1. This project is a TypeScript Azure Functions application.
 2. It is subscribed to an Azure [Event Grid](https://azure.microsoft.com/en-us/services/event-grid/) topic and listens for events. Each event contains information about the content that was changed.
 3. After receiving an event, it fetches the content from the Blob storage.
 4. The fetched content is first procesed into a JSON object, that is supposed to satisfy [OpenAPI Specification 3.0.2](https://github.com/OAI/OpenAPI-Specification) format. The JSON is also validated using the [openapi-schema-validator](https://www.npmjs.com/package/openapi-schema-validator) package.
-5. The created JSON object is then processed by a forked [Redoc package](https://www.npmjs.com/package/kentico-cloud-docs-redoc). Redoc generates an HTML file that represents a single API Reference page.
+5. The created JSON object is then processed by a forked [Redoc package](https://www.npmjs.com/package/kentico-kontent-docs-redoc). Redoc generates an HTML file that represents a single API Reference page.
 6. Finally, a blob with the generated HTML is stored to an Azure Blob Storage.
 
 ## Setup

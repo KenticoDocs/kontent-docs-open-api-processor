@@ -3,7 +3,7 @@ import {
     HeadersObject,
     SchemaObject,
 } from '@loopback/openapi-v3-types';
-import { IPreprocessedItems } from 'cloud-docs-shared-code';
+import { IPreprocessedItems } from 'kontent-docs-shared-code';
 import { sendNotification } from '../external/sendNotification';
 import {
     ISchemasObject,

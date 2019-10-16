@@ -2,7 +2,7 @@ import {
     ICallout,
     ICodeSample,
     IPreprocessedItems,
-} from 'cloud-docs-shared-code';
+} from 'kontent-docs-shared-code';
 import { ISchemas } from '../generate/getSchemaObjects';
 import {
     getItemData,
