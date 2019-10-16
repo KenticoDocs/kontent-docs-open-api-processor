@@ -34,7 +34,7 @@ export const getHtml = async (templatePath: string, specification: object, optio
     const time = Date.now() - start;
     consola.log(`\n🎉 bundled successfully: (${sizeInKiB} KiB) [⏱ ${time / 1000}s]`);
     pageHTML = pageHTML.replace('//# sourceMappingURL=redoc.standalone.js.map', '');
-    // pageHTML = unescapeMultipleSlash(pageHTML);
+    pageHTML = unescapeMultipleSlash(pageHTML);
     return pageHTML;
 };
 
@@ -94,8 +94,13 @@ const escapeClosingScriptTag = (str: string): string =>
 const escapeUnicode = (str: string): string =>
     str.replace(/\u2028|\u2029/g, (m) => '\\u202' + (m === '\u2028' ? '8' : '9'));
 
-/*const unescapeMultipleSlash = (str: string): string => {
-    str = str.replace(/\\\\\\&quot;/g, '&quot;');
-    str = str.replace(/\\\\n/g, '\n');
+const unescapeMultipleSlash = (str: string): string => {
+    const regexTokenString = /(<span class="token string">)(.*)(<\/span>)/g;
+    str = str.replace(regexTokenString, (match, $1, $2, $3) => {
+        $2 = $2.replace(/\\\\\\&quot;/g, '\\&quot;');
+        $2 = $2.replace(/\\\\n/g, '\n');
+        return $1 + $2 + $3;
+    });
+
     return str;
-};*/
+};
