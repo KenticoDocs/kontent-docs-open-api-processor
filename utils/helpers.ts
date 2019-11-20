@@ -20,8 +20,9 @@ export const isNonEmptyTextOrRichTextLinksElement = (text: string): boolean => {
     return trimmedText && trimmedText.length > 0 && trimmedText !== '<p><br></p>';
 };
 
-export const getItemData = <DataObject>(codename: string, items: IPreprocessedItems): DataObject =>
-    items[codename] as any as DataObject;
+export function getItemData<DataObject>(codename: string, items: IPreprocessedItems): undefined | DataObject  {
+    return items[codename] as any as DataObject | undefined;
+}
 
 export const getReferenceObject = (container: string, name: string): ReferenceObject => ({
     $ref: `#/components/${container}/${name}`,

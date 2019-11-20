@@ -33,6 +33,7 @@ import {
     IServer,
     IZapiSpecification,
 } from 'kontent-docs-shared-code/reference/preprocessedModels';
+
 import { fixPrimaryHeadings } from '../utils/commonMarkProcessing';
 import {
     getBooleanProperty,
@@ -43,11 +44,7 @@ import {
     getNonEmptyStringProperty,
     getSchemaProperty,
 } from '../utils/getProperties';
-import {
-    getItemData,
-    getReferenceObject,
-    isNonEmptyTextOrRichTextLinksElement,
-} from '../utils/helpers';
+import { getItemData, getReferenceObject, isNonEmptyTextOrRichTextLinksElement } from '../utils/helpers';
 import {
     getChildCodenamesFromRichText,
     getChildrenInfosFromRichText,
@@ -55,10 +52,7 @@ import {
     processRichTextWithChildren,
     processRichTextWithOnlyCallouts,
 } from '../utils/richTextProcessing';
-import {
-    getSchemaObject,
-    ISchemas,
-} from './getSchemaObjects';
+import { getSchemaObject, ISchemas } from './getSchemaObjects';
 
 interface ISecuritychemeObject {
     [name: string]: SecuritySchemeObject;
@@ -138,7 +132,7 @@ export class ApiSpecificationGenerator {
         childrenInfos.forEach((schemaInfo) => {
             const schemaData = getItemData<ISchemas>(schemaInfo.codename, items);
 
-            if (schemaData.contentType.includes('schema')) {
+            if (schemaData && schemaData.contentType.includes('schema')) {
                 this.resolveSingleSchema(schemaData, schemaInfo, schemas, items);
             }
         });

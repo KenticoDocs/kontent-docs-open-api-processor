@@ -10,7 +10,7 @@ export const getApiSpecificationGenerator = (): ApiSpecificationGenerator => {
     return apiSpecificationGenerator;
 };
 
-export const initializeApiSpecificationGenerator = () => {
+export const initializeApiSpecificationGenerator = (): ApiSpecificationGenerator => {
     apiSpecificationGenerator = new ApiSpecificationGenerator();
 
     return apiSpecificationGenerator;
