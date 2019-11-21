@@ -4,9 +4,6 @@
 		"tslint:recommended"
 	],
 	"linterOptions": {
-		"include": [
-			"./kcd-notifier/*.ts"
-		]
 	},
 	"jsRules": {},
 	"rules": {

@@ -110,16 +110,19 @@ export class ApiSpecificationGenerator {
     public resolveSchemaObjectsInLinkedItems = (element: string[], items: IPreprocessedItems): SchemaObject[] => {
         const schemas = [];
         element.map((codename) => {
-            const schemaData = getItemData<ISchemas>(codename, items);
-            const identifier = schemaData.id;
-            const schemaName = isNonEmptyTextOrRichTextLinksElement(schemaData.name)
-                ? schemaData.name
-                : codename;
+            const schemaData: ISchemas | undefined = getItemData<ISchemas | undefined>(codename, items);
 
-            this.schemasComponents[schemaName] = getSchemaObject(schemaData, items);
-            const schemaReferenceObject = getReferenceObject('schemas', schemaName);
-            schemas.push(schemaReferenceObject);
-            this.processedSchemaObjects[identifier] = schemaReferenceObject;
+            if (schemaData) {
+                const identifier = schemaData.id;
+                const schemaName = isNonEmptyTextOrRichTextLinksElement(schemaData.name)
+                    ? schemaData.name
+                    : codename;
+
+                this.schemasComponents[schemaName] = getSchemaObject(schemaData, items);
+                const schemaReferenceObject = getReferenceObject('schemas', schemaName);
+                schemas.push(schemaReferenceObject);
+                this.processedSchemaObjects[identifier] = schemaReferenceObject;
+            }
         });
 
         return schemas;
