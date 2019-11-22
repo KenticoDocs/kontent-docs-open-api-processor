@@ -20,14 +20,8 @@ export const isNonEmptyTextOrRichTextLinksElement = (text: string): boolean => {
     return trimmedText && trimmedText.length > 0 && trimmedText !== '<p><br></p>';
 };
 
-export function getItemData<DataObject>(codename: string, items: IPreprocessedItems): DataObject  {
-    const item = items[codename] as any as DataObject | undefined;
-
-    if (item) {
-        return item;
-    }
-
-    throw Error(`Could not get item data for codename '${codename}'`);
+export function getItemData<DataObject>(codename: string, items: IPreprocessedItems): undefined | DataObject  {
+    return items[codename] as any as DataObject | undefined;
 }
 
 export const getReferenceObject = (container: string, name: string): ReferenceObject => ({

@@ -249,6 +249,10 @@ export const resolveDiscriminatorObject = (field: string, items: IPreprocessedIt
         const codename = discriminatorInfo[0].codename;
         const discriminatorData = getItemData<IDiscriminator>(codename, items);
 
+        if (!discriminatorData) {
+            throw Error(`Invalid discriminator data for item with codename '${codename}'`);
+        }
+
         return {
             mapping: resolveDiscriminatorMapItemObject(discriminatorData.mapping, items),
             propertyName: discriminatorData.propertyName,

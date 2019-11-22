@@ -281,6 +281,11 @@ export class ApiSpecificationGenerator {
         items: IPreprocessedItems,
     ): void => {
         const schemaData = getItemData<ISchemas>(parameterData.schema[0], items);
+
+        if (schemaData) {
+            return;
+        }
+
         const schemaType = schemaData.contentType;
         const exampleValue = parameterData.example;
         if (exampleValue) {
