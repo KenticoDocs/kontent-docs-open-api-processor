@@ -139,7 +139,14 @@ export const getLabelledCodeSamples = (codeSampleCodenames: string[], items: IPr
 
 const getLabelledCodeSampleItems = (codenames: string[], items: IPreprocessedItems): string => {
     const codeSampleItems = codenames.map((codename) => {
-        const { programmingLanguage, platform } = getItemData<ICodeSample>(codename, items);
+
+        const codeSample = getItemData<ICodeSample>(codename, items);
+
+        if (!codeSample) {
+            throw Error(`Invalid code sample with codename '${codename}'`);
+        }
+
+        const { programmingLanguage, platform } = codeSample;
 
         return getLabelledCodeSample(codename, programmingLanguage, platform);
     });

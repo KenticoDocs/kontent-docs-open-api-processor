@@ -85,6 +85,11 @@ const insertChildrenIntoCommonMark = (content: string, items: IPreprocessedItems
         const childMarkToReplace = `<!--codename=${codename}-->`;
 
         const childData = getItemData<ICodeSample | ICallout | ISchemas>(codename, items);
+
+        if (!childData) {
+            throw Error(`Invalid child data for codename '${codename}'`);
+        }
+
         switch (childData.contentType) {
             case 'callout': {
                 const calloutContent = getCalloutContent(childData as ICallout);
