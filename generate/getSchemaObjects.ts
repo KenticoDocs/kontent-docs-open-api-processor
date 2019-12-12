@@ -234,12 +234,14 @@ interface ISchemaObjectBooleanElements {
     readonly nullable?: boolean,
     readonly readOnly?: boolean,
     readonly writeOnly?: boolean,
+    readonly deprecated?: boolean
 }
 
 const getSchemaObjectPropertyElements = (schemaData: ISchemaObjectPropertyElements): ISchemaObjectBooleanElements => ({
     ...getBooleanProperty(schemaData.nullable, 'nullable'),
     ...getBooleanProperty(schemaData.readonly, 'readOnly'),
     ...getBooleanProperty(schemaData.writeonly, 'writeOnly'),
+    ...getBooleanProperty(schemaData.deprecated, 'deprecated'),
 });
 
 export const resolveDiscriminatorObject = (field: string, items: IPreprocessedItems): DiscriminatorObject => {
