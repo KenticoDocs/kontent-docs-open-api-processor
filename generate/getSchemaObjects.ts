@@ -95,6 +95,7 @@ export const getSchemaObject = (schemaData: ISchemas, items: IPreprocessedItems)
 
 const getSchemaAllOfObject = (schemaData: ISchemaAllOf, items: IPreprocessedItems): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items, schemaData.contentType),
+    ...getSchemaObjectPropertyElements(schemaData),
     ...getSchemaProperty(
         getApiSpecificationGenerator()
             .resolveSchemaObjectsInRichTextElement(schemaData.schemas, items), 'allOf',
@@ -112,6 +113,7 @@ const getSchemaAnyOfObject = (schemaData: ISchemaAnyOf, items: IPreprocessedItem
 
 const getSchemaArrayObject = (schemaData: ISchemaArray, items: IPreprocessedItems): SchemaObject => ({
     ...getSchemaCommonElements(schemaData, items, schemaData.contentType),
+    ...getSchemaObjectPropertyElements(schemaData),
     ...getSchemaProperty(
         getApiSpecificationGenerator()
             .resolveSchemaObjectsInRichTextElement(schemaData.items, items), 'items',
