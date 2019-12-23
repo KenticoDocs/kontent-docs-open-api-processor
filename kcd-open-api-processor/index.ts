@@ -36,7 +36,7 @@ export const eventGridEvent: AzureFunction = async (
 
         Configuration.set(false);
 
-        const url: string = 'https://kcddev.blob.core.windows.net/reference-data-tests/management_api_v2-preview';
+        const url: string = 'https://kcddev.blob.core.windows.net/reference-data-tests/management_api_v2';
 
         const blob = await getBlobFromStorage<IPreprocessedData>(
             url,
