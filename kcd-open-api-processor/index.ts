@@ -28,18 +28,14 @@ export const eventGridEvent: AzureFunction = async (
     event: IBlobEventGridEvent,
 ): Promise<void> => {
     try {
-        /*
         apiSpecificationCodename = 'not yet processed';
         const container = getBlobContainerName(event);
         const isTest = container.includes('test');
-        */
 
-        Configuration.set(false);
-
-        const url: string = 'https://kcddev.blob.core.windows.net/reference-data-tests/management_api_v2';
+        Configuration.set(isTest);
 
         const blob = await getBlobFromStorage<IPreprocessedData>(
-            url,
+            event.data.url,
             Configuration.keys.azureAccountName,
             Configuration.keys.azureStorageKey,
         );

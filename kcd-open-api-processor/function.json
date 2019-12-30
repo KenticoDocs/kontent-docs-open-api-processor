@@ -1,10 +1,9 @@
 {
   "bindings": [
- {
-        "type": "httpTrigger",
-        "name": "req",
-        "direction": "in",
-        "methods": [ "get" ]
+    {
+      "type": "eventGridTrigger",
+      "name": "eventGridEvent",
+      "direction": "in"
     }
   ],
   "disabled": false,
