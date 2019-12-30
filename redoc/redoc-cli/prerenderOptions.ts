@@ -1,10 +1,10 @@
 export const prerenderOptions = {
-    disableSearch: true,
-    hideDownloadButton: true,
+    disableSearch: 'true',
+    hideDownloadButton: 'true',
     jsonSampleExpandLevel: 3,
-    pathInMiddlePanel: true,
-    requiredPropsFirst: true,
-    sortPropsAlphabetically: true,
+    pathInMiddlePanel: 'true',
+    requiredPropsFirst: 'true',
+    sortPropsAlphabetically: 'true',
     theme: {
         colors: {
             http: {

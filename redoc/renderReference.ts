@@ -16,7 +16,7 @@ export const renderReference = async (specification: OpenApiSpec, blob: IPreproc
 
     const traversedSpecification = traverseObject(specification, resolveComponents);
 
-    const html = await getHtml(template, traversedSpecification, prerenderOptions);
+    const html = await getHtml(template, specification, prerenderOptions);
     const blobName = getBlobName(blob.zapiSpecificationCodename, 'html', blob.operation);
     await storeReferenceDataToBlobStorage(html, blobName, Configuration.keys.azureContainerName);
 };
