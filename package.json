@@ -21,7 +21,7 @@
     "consola": "2.11.1",
     "html2commonmark": "0.6.1",
     "ieee754": "1.1.13",
-    "kentico-kontent-docs-redoc": "3.0.3",
+    "kentico-kontent-docs-redoc": "3.0.6",
     "mobx": "5.15.1",
     "ms-rest-azure": "3.0.0",
     "node-html-parser": "1.1.16",
