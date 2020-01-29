@@ -78,6 +78,7 @@ export const prerenderOptions = {
             fontFamily: 'GT Walsheim Pro, Helvetica, Arial, sans-serif',
             fontSize: '1em',
             fontWeightBold: 700,
+            fontWeightRegular: 300,
             headings: {
                 fontFamily: 'GT Walsheim Pro, Helvetica, Arial, sans-serif',
                 fontSize: '1.875em',
