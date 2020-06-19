@@ -1,6 +1,10 @@
 export const prerenderOptions = {
     disableSearch: true,
+    expandSingleSchemaField: true,
     hideDownloadButton: true,
+    hideLoading: true,
+    hideSchemaTitles: true,
+    hideSingleRequestSampleTab: true,
     jsonSampleExpandLevel: 5,
     pathInMiddlePanel: true,
     requiredPropsFirst: false,
