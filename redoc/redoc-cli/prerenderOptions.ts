@@ -8,6 +8,7 @@ export const prerenderOptions = {
     jsonSampleExpandLevel: 5,
     pathInMiddlePanel: true,
     requiredPropsFirst: false,
+    simpleOneOfTypeLabel: true,
     sortPropsAlphabetically: false,
     theme: {
         colors: {
