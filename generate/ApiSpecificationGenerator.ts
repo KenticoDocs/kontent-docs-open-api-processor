@@ -504,7 +504,7 @@ export class ApiSpecificationGenerator {
             const codeSamplesObject = getItemData<ICodeSamples>(codeSamplesCodename, items);
             const codeSampleCodenames = codeSamplesObject.codeSamples;
 
-            pathMethod['x-code-samples'] = codeSampleCodenames.map((codename) => {
+            pathMethod['x-codeSamples'] = codeSampleCodenames.map((codename) => {
                 const codeSampleObject = getItemData<ICodeSample>(codename, items);
 
                 return {
